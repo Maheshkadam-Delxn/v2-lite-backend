@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   await dbConnect();
   const session = await getSession(req as any);
 
-  if (!session || !canAccess(session.role, ["admin", "manager"])) {
+  if (!session ) {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 });
   }
 
