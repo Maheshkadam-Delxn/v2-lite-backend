@@ -20,7 +20,7 @@ const ProjectSchema = new Schema(
 
 
     projectType: { type: Schema.Types.ObjectId, ref: "ProjectType", required: true },
-
+rejectionReason:{type:String},
     manager: { type: Schema.Types.ObjectId, ref: "User", required: true },
     engineers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     status: {
