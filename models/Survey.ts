@@ -4,10 +4,10 @@ const { Schema } = mongoose;
 const SurveySchema = new Schema(
   {
     projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
-    surveyType:{type:String},
+   
     surveyDate:{type:String},
-    assignContractor:{type:String},
-    requestedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    assignContractor:{ type: Schema.Types.ObjectId, ref: "User" },
+    requestedBy: { type: Schema.Types.ObjectId, ref: "User" },
     approvedBy: { type: Schema.Types.ObjectId, ref: "User" },
     description: { type: String },
     documents: [{ type: String }],
