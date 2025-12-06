@@ -2,12 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Role from "@/models/Role";
 
-
+// // Optional: GET single role by ID (bonus for completeness)
+// export async function GET(
+//   req: NextRequest,
+//   context: { params: Promise<{ id: string }> }
+// ) {
+//   try {
+//     const { id } = await context.params;
+//     await dbConnect();
+//     const role = await Role.findById(id).lean();
+//     if (!role) {
+//       return NextResponse.json({ error: "Role not found" }, { status: 404 });
+//     }
+//     return NextResponse.json(role);
+//   } catch (error: any) {
+//     console.error("Role fetch failed:", error);
+//     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+//   }
+// }
 
 // PUT: Update role by ID
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const body = await req.json();
     await dbConnect();
 
@@ -67,9 +87,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // Optional: DELETE role by ID (if needed)
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     await dbConnect();
 
     const role = await Role.findById(id);
