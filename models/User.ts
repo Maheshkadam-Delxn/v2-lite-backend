@@ -17,7 +17,7 @@ const UserSchema = new Schema(
     // ✅ New Email Verification Fields
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String, default: null },
-
+newpassRequired: { type: Boolean, default: false },
     designation: { type: String },
     profileImage: { type: String },
     assignedProjects: [{ type: Schema.Types.ObjectId, ref: "Project" }],
@@ -35,4 +35,5 @@ UserSchema.virtual("roleName").get(function () {
   return this.role;
 });
 
+delete mongoose.models.User;
 export default mongoose.models.User || mongoose.model("User", UserSchema);

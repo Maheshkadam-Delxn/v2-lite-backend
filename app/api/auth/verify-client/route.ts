@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     // Update user
     user.password = hashedPassword;
     user.isEmailVerified = true;
-   
+   user.newpassRequired= false;
     await user.save();
 
     return NextResponse.json(

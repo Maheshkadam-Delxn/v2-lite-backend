@@ -26,6 +26,7 @@ export async function POST(req: Request) {
 
   const body = await req.json();
   const project = await Project.findById(body.projectId);
+  console.log("body of this survey",body);
   if (!project)
     return NextResponse.json({ success: false, message: "Project not found" }, { status: 404 });
 
@@ -34,7 +35,8 @@ export async function POST(req: Request) {
     requestedBy: session._id,
     status: "pending",
   });
-
+project.assignedSiteSurvey = session._id;  // <-- Add this field in schema
+  await project.save();
   return NextResponse.json({
     success: true,
     message: "Survey request created successfully",

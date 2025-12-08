@@ -15,6 +15,7 @@ const ProjectSchema = new Schema(
     clientName: {type:String},
    clientEmail: {type:String},
     clientPhone: {type:Number, unique:true},
+    assignedSiteSurvey:{ type: Schema.Types.ObjectId, ref: "User" },
     budget:{type:Number},
     selectedItems:[{type:String}],
 

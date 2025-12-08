@@ -109,10 +109,21 @@ export async function POST(req: Request) {
       {
         success: false,
         message: "Please verify your email before logging in.",
+        status:403
       },
       { status: 403 }
     );
   }
+   if (user.newpassRequired) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Update Password",
+      },
+      { status: 403 }
+    );
+  }
+
 
   // ------------------------------
   // CHECK PASSWORD
