@@ -68,3 +68,45 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
   return NextResponse.json({ success: true, message: "Survey deleted successfully" });
 }
+
+export async function PATCH(req: Request,  context: { params: Promise<{ id: string }>}) {
+  try {
+    await dbConnect();
+    const session = await getSession(req as any);
+    const { id } = await context.params;
+
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const updateData = await req.json();
+console.log(updateData);
+    const updatedSurvey = await Survey.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedSurvey) {
+      return NextResponse.json(
+        { success: false, message: "Survey not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Survey updated",
+      data: updatedSurvey
+    });
+
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, message: err.message },
+      { status: 500 }
+    );
+  }
+}
