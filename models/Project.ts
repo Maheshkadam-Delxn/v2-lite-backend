@@ -11,7 +11,10 @@ const ProjectSchema = new Schema(
     startDate: { type: Date },
     endDate: { type: Date },
     projectImages:{type:String},
-    projectDocuments:[{type:String}],
+   projectDocuments: [{
+  type: Object
+}]
+,
     clientName: {type:String},
    clientEmail: {type:String},
     clientPhone: {type:Number, unique:true},
