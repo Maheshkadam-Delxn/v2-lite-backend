@@ -94,10 +94,13 @@ const BOQSchema = new mongoose.Schema({
   // Status
   status: {
     type: String,
-    enum: ['draft', 'pending', 'approved', 'rejected'],
+    enum: ['draft', 'approved', 'rejected'],
     default: 'draft'
   },
-  
+  rejectionReason: {
+  type: String,
+  default: ""
+},
   // Version
   version: {
     type: Number,
