@@ -10,7 +10,7 @@ const TaskSchema = new Schema(
     description: { type: String },
     startDate: { type: Date },
     dueDate: { type: Date },
-    status: { type: String, enum: ["todo", "in-progress", "done"], default: "todo" },
+    status: { type: String,  default: "todo" },
     progress: { type: Number, default: 0 },
     attachments: [{ type: String }],
     comments: [
