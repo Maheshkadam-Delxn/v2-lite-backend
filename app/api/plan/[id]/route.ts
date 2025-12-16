@@ -5,14 +5,64 @@ import Plan from "@/models/Plan";
 import { Types } from "mongoose";
 
 /* =========================================================
+   GET SINGLE PLAN
+   ========================================================= */
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  await dbConnect();
+  const session = await getSession(req as any);
+
+  if (!session)
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+
+  const { id } = await context.params;
+
+  // Validate ObjectId
+  if (!Types.ObjectId.isValid(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid Plan ID" },
+      { status: 400 }
+    );
+  }
+
+  const plan = await Plan.findOne({ _id: id, isArchived: false })
+    .populate("uploadedBy projectId")
+    .sort({ uploadedAt: -1 });
+
+  if (!plan) {
+    return NextResponse.json(
+      { success: false, message: "Plan not found" },
+      { status: 404 }
+    );
+  }
+
+  // Optionally populate current version details (e.g., annotations if needed)
+  const currentVersion = plan.versions.find(
+    (v: any) => v.versionNumber === plan.currentVersion
+  );
+  if (currentVersion) {
+    // Filter out deleted annotations if displaying them
+    currentVersion.annotations = currentVersion.annotations.filter(
+      (ann: any) => !ann.isDeleted
+    );
+  }
+
+  return NextResponse.json({ success: true, data: { ...plan.toObject(), currentVersion } });
+}
+
+/* =========================================================
    UPDATE PLAN / ANNOTATIONS
    ========================================================= */
 export async function PUT(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-
-  console.log("REQ",req);
+  console.log("REQ", req);
   await dbConnect();
   const session = await getSession(req as any);
 
@@ -25,11 +75,10 @@ export async function PUT(
   const body = await req.json();
   const { action } = body;
 
-  
-const { id } = await context.params;
+  const { id } = await context.params;
   const plan = await Plan.findById(id);
 
-  console.log("Plan",plan);
+  console.log("Plan", plan);
   if (!plan)
     return NextResponse.json(
       { success: false, message: "Plan not found" },
@@ -64,26 +113,25 @@ const { id } = await context.params;
      ADD ANNOTATION
      ===================================================== */
   if (action === "ADD_ANNOTATIONS") {
-  for (const ann of body.annotations) {
-    version.annotations.push({
-      _id: new Types.ObjectId(),
-      type: ann.type,
-      position: ann.position,
-      payload: ann.payload,
-      createdBy: session._id,
-      createdAt: new Date()
+    for (const ann of body.annotations) {
+      version.annotations.push({
+        _id: new Types.ObjectId(),
+        type: ann.type,
+        position: ann.position,
+        payload: ann.payload,
+        createdBy: session._id,
+        createdAt: new Date()
+      });
+    }
+
+    await plan.save();
+
+    return NextResponse.json({
+      success: true,
+      message: "Annotations added successfully",
+      data: version.annotations
     });
   }
-
-  await plan.save();
-
-  return NextResponse.json({
-    success: true,
-    message: "Annotations added successfully",
-    data: version.annotations
-  });
-}
-
 
   /* =====================================================
      UPDATE ANNOTATION
@@ -140,7 +188,6 @@ const { id } = await context.params;
   );
 }
 
-
 export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string }> }
@@ -148,7 +195,7 @@ export async function DELETE(
   await dbConnect();
   const session = await getSession(req as any);
 
-  const {id} = await context.params;
+  const { id } = await context.params;
 
   if (!session) {
     return NextResponse.json(
