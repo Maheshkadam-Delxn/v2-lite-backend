@@ -139,3 +139,45 @@ const { id } = await context.params;
     { status: 400 }
   );
 }
+
+
+export async function DELETE(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  await dbConnect();
+  const session = await getSession(req as any);
+
+  const {id} = await context.params;
+
+  if (!session) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  // Validate ObjectId
+  if (!Types.ObjectId.isValid(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid Plan ID" },
+      { status: 400 }
+    );
+  }
+
+  const plan = await Plan.findById(id);
+
+  if (!plan) {
+    return NextResponse.json(
+      { success: false, message: "Plan not found" },
+      { status: 404 }
+    );
+  }
+
+  await Plan.findByIdAndDelete(id);
+
+  return NextResponse.json({
+    success: true,
+    message: "Plan deleted successfully"
+  });
+}
