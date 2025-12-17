@@ -15,7 +15,7 @@
     "jose": "^6.1.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.3",
+    "mongoose": "^8.20.3",
     "next": "^16.0.7",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.10",

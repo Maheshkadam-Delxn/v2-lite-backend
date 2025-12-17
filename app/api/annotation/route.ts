@@ -30,6 +30,9 @@ export async function POST(req: Request) {
       category,
       severity,
       attachments,
+      assignedTo,
+      status = "open",
+      resolutionNote,
     } = await req.json();
 
     if (!projectId || !planId || !planVersion || !position || !title || !category) {
@@ -59,6 +62,9 @@ export async function POST(req: Request) {
       severity,
       attachments,
       createdBy: session._id,
+      assignedTo,
+      status,
+      resolutionNote,
     });
 
     return NextResponse.json(

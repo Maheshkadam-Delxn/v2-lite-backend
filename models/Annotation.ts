@@ -123,6 +123,7 @@ const AnnotationSchema = new Schema(
         fileType: String,
         fileSize: Number,
         uploadedAt: Date,
+        originalName: { type: String, trim: true },
       },
     ],
 
