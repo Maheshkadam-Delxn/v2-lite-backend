@@ -5,80 +5,139 @@ import Plan from "@/models/Plan";
 import Project from "@/models/Project";
 
 /* =========================================================
-   GET PLANS
+   GET PLANS (Project-wise)
    ========================================================= */
 export async function GET(req: Request) {
-  await dbConnect();
-  const session = await getSession(req as any);
+  try {
+    await dbConnect();
+    const session = await getSession(req as any);
 
-  if (!session)
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get("projectId");
+
+    if (!projectId) {
+      return NextResponse.json(
+        { success: false, message: "projectId is required" },
+        { status: 400 }
+      );
+    }
+
+    const plans = await Plan.find({ projectId })
+      .populate("uploadedBy projectId")
+      .sort({ createdAt: -1 });
+
+    return NextResponse.json({
+      success: true,
+      data: plans,
+    });
+  } catch (error) {
+    console.error("GET PLANS ERROR:", error);
     return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
+      { success: false, message: "Internal server error" },
+      { status: 500 }
     );
-
-  const { searchParams } = new URL(req.url);
-  const projectId = searchParams.get("projectId");
-
-  const filter: any = { isArchived: false };
-  if (projectId) filter.projectId = projectId;
-
-  const plans = await Plan.find(filter)
-    .populate("uploadedBy projectId")
-    .sort({ uploadedAt: -1 });
-
-  return NextResponse.json({ success: true, data: plans });
+  }
 }
 
 /* =========================================================
-   CREATE PLAN
+   CREATE PLAN / CREATE NEW VERSION
    ========================================================= */
 export async function POST(req: Request) {
+  try {
+    await dbConnect();
+    const session = await getSession(req as any);
 
-  console.log("Req",req);
-  await dbConnect();
-  const session = await getSession(req as any);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-  if (!session)
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
+    const {
+      projectId,
+      title,
+      planType,
+      floor,
+      area,
+      file,
+      remarks,
+    } = await req.json();
 
-  const { projectId, name, fileUrl, fileType } = await req.json();
+    if (!projectId || !title || !planType || !file?.url) {
+      return NextResponse.json(
+        { success: false, message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
 
-  if (!projectId || !name)
-    return NextResponse.json(
-      { success: false, message: "Missing required fields" },
-      { status: 400 }
-    );
+    // 🔍 Validate project
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, message: "Project not found" },
+        { status: 404 }
+      );
+    }
 
-  const project = await Project.findById(projectId);
-  if (!project)
-    return NextResponse.json(
-      { success: false, message: "Project not found" },
-      { status: 404 }
-    );
+    // 🔍 Find existing latest plan (if any)
+    const latestPlan = await Plan.findOne({
+      projectId,
+      planType,
+      floor,
+      area,
+      isLatest: true,
+    });
 
-  const plan = await Plan.create({
-    projectId,
-    name,
-    fileUrl, 
-    fileType,
-    uploadedBy: session._id,
-    versions: [
-      {
-        versionNumber: 1,
-        createdBy: session._id,
-        annotations: []
-      }
-    ],
-    currentVersion: 1
-  });
+    let version = 1;
+    let previousPlanId = null;
 
-  return NextResponse.json({
+    if (latestPlan) {
+      version = latestPlan.version + 1;
+      previousPlanId = latestPlan._id;
+
+      // Mark old version as not latest
+      await Plan.updateOne(
+        { _id: latestPlan._id },
+        { isLatest: false }
+      );
+    }
+
+    const plan = await Plan.create({
+      projectId,
+      title,
+      planType,
+      floor,
+      area,
+      file,
+      version,
+      previousPlanId,
+      isLatest: true,
+      remarks,
+      uploadedBy: session._id,
+    });
+
+  return NextResponse.json(
+  {
     success: true,
-    message: "Plan created successfully",
-    data: plan
-  });
+    message: "Plan uploaded successfully",
+    data: plan,
+  },
+  { status: 201 }
+);
+
+  } catch (error) {
+    console.error("CREATE PLAN ERROR:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

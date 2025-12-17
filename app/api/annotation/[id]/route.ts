@@ -1,12 +1,12 @@
 import dbConnect from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import Plan from "@/models/Plan";
+import Annotation from "@/models/Annotation";
 
 /* =========================================================
-   GET SINGLE PLAN
+   UPDATE / RESOLVE ANNOTATION
    ========================================================= */
-export async function GET(
+export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -21,24 +21,35 @@ export async function GET(
       );
     }
 
-    const { id: planId } = await params; // ✅ FIX
+    const { id } = await params;
+    const updateData = await req.json();
 
-    const plan = await Plan.findById(planId)
-      .populate("uploadedBy projectId");
-
-    if (!plan) {
+    const annotation = await Annotation.findById(id);
+    if (!annotation) {
       return NextResponse.json(
-        { success: false, message: "Plan not found" },
+        { success: false, message: "Annotation not found" },
         { status: 404 }
       );
     }
 
+    // Auto set resolvedAt
+    if (updateData.status === "resolved") {
+      updateData.resolvedAt = new Date();
+    }
+
+    Object.assign(annotation, updateData);
+    await annotation.save();
+
     return NextResponse.json(
-      { success: true, data: plan },
+      {
+        success: true,
+        message: "Annotation updated successfully",
+        data: annotation,
+      },
       { status: 200 }
     );
   } catch (error) {
-    console.error("GET PLAN ERROR:", error);
+    console.error("UPDATE ANNOTATION ERROR:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
@@ -46,9 +57,8 @@ export async function GET(
   }
 }
 
-
 /* =========================================================
-   DELETE PLAN (ONLY NON-LATEST)
+   DELETE ANNOTATION
    ========================================================= */
 export async function DELETE(
   req: Request,
@@ -65,38 +75,27 @@ export async function DELETE(
       );
     }
 
-    const { id: planId } = await params; // ✅ FIX
+    const { id } = await params;
 
-    const plan = await Plan.findById(planId);
-
-    if (!plan) {
+    const annotation = await Annotation.findById(id);
+    if (!annotation) {
       return NextResponse.json(
-        { success: false, message: "Plan not found" },
+        { success: false, message: "Annotation not found" },
         { status: 404 }
       );
     }
 
-    if (plan.isLatest) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Cannot delete the latest plan version",
-        },
-        { status: 400 }
-      );
-    }
-
-    await Plan.deleteOne({ _id: planId });
+    await Annotation.deleteOne({ _id: id });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Plan deleted successfully",
+        message: "Annotation deleted successfully",
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("DELETE PLAN ERROR:", error);
+    console.error("DELETE ANNOTATION ERROR:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
