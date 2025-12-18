@@ -6,6 +6,7 @@ const MaterialSchema = new Schema(
     projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
     addedBy: { type: Schema.Types.ObjectId, ref: "User" },
     name: { type: String, required: true },
+    boqItemId:{type:Schema.Types.ObjectId,ref:"BOQ"},
     unit: { type: String },
     quantity: { type: Number, required: true },
     purchaseDate: { type: Date, default: Date.now },

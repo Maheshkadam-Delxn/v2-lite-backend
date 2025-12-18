@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/dbConnect";
 import Material from "@/models/Material";
 import Project from "@/models/Project";
+import BOQ from "@/models/Boq";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccess } from "@/utils/permissions";
@@ -42,13 +43,31 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   await dbConnect();
   const session = await getSession(req as any);
-  if (!session)
-    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+   if (!session)
+     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
   const project = await Project.findById(body.projectId);
   if (!project)
     return NextResponse.json({ success: false, message: "Project not found" }, { status: 404 });
+
+  if (!body.name || !body.quantity || !body.unit) {
+  return NextResponse.json(
+    { success: false, message: "name, quantity and unit are required" },
+    { status: 400 }
+  );
+}
+
+if (body.boqItemId) {
+  const boq = await BOQ.findById(body.boqItemId);
+  if (!boq || boq.projectId.toString() !== body.projectId) {
+    return NextResponse.json(
+      { success: false, message: "Invalid BOQ reference" },
+      { status: 400 }
+    );
+  }
+}
+
 
   const material = await Material.create({
     ...body,

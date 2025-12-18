@@ -1,4 +1,7 @@
 |-- .env
+|-- .expo
+    |-- README.md
+    |-- settings.json
 |-- .gitignore
 |-- app
     |-- api
@@ -38,6 +41,10 @@
                 |-- route.ts
             |-- route.ts
             |-- team
+                |-- route.ts
+        |-- annotation
+            |-- route.ts
+            |-- [id]
                 |-- route.ts
         |-- announcements
             |-- pin
@@ -108,6 +115,8 @@
             |-- [id]
                 |-- route.ts
         |-- plan
+            |-- latest
+                |-- route.ts
             |-- route.ts
             |-- [id]
                 |-- route.ts
@@ -244,6 +253,7 @@
 |-- models
     |-- Activity.ts
     |-- ActivityLog.ts
+    |-- Annotation.ts
     |-- Announcement.ts
     |-- Boq.ts
     |-- Document.ts
