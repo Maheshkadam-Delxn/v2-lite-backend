@@ -82,6 +82,8 @@ export async function POST(req: Request) {
   await dbConnect();
   const body = await req.json();
 
+  console.log("Body",body);
+
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success)
     return NextResponse.json(
