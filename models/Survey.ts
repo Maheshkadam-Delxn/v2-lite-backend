@@ -35,7 +35,8 @@ const { Schema } = mongoose;
 
 const SurveySchema = new Schema(
   {
-    projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+    projectId: { type: Schema.Types.ObjectId, ref: "Project"},
+    projectTypeId:{type: Schema.Types.ObjectId, ref:"ProjectType"},
 
     surveyDate: { type: String },
 

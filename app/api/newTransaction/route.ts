@@ -1,9 +1,10 @@
 import dbConnect from "@/lib/dbConnect";
-import Material from "@/models/Material";
+import Transaction from "@/models/NewTransaction";
 import Project from "@/models/Project";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { canAccess } from "@/utils/permissions";
+
+
 
 
 
@@ -18,15 +19,15 @@ export async function POST(req: Request) {
   if (!project)
     return NextResponse.json({ success: false, message: "Project not found" }, { status: 404 });
 
-  const material = await Material.create({
+  const material = await Transaction.create({
     ...body,
-    addedBy: session._id,
+    createdBy: session._id,
    
   });
 
   return NextResponse.json({
     success: true,
-    message: "Material added successfully",
+    message: "Transaction added successfully",
     data: material,
   });
 }

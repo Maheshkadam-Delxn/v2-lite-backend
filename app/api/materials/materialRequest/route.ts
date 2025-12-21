@@ -1,5 +1,5 @@
 import dbConnect from "@/lib/dbConnect";
-import Material from "@/models/Material";
+import MaterialRequest from "@/models/MaterialRequest";
 import Project from "@/models/Project";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
@@ -18,15 +18,16 @@ export async function POST(req: Request) {
   if (!project)
     return NextResponse.json({ success: false, message: "Project not found" }, { status: 404 });
 
-  const material = await Material.create({
+  const materialRequest = await MaterialRequest.create({
     ...body,
     addedBy: session._id,
+    status:"Requested",
    
   });
 
   return NextResponse.json({
     success: true,
     message: "Material added successfully",
-    data: material,
+    data: materialRequest,
   });
 }

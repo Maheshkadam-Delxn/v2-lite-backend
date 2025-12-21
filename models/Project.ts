@@ -16,6 +16,7 @@ const ProjectSchema = new Schema(
 }]
 ,
     clientName: {type:String},
+    needsNewSiteSurvey:{type:Boolean},
    clientEmail: {type:String},
     clientPhone: {type:Number, unique:true},
     assignedSiteSurvey:{ type: Schema.Types.ObjectId, ref: "User" },
