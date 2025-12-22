@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse,NextRequest } from "next/server";
 import mongoose from "mongoose";
 import dbConnect from "@/lib/dbConnect";
 import PlanFolder from "@/models/PlanAnnotaion";
 import { getSession } from "@/lib/auth";
 
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { folderId: string } }
 ) {
   await dbConnect();
