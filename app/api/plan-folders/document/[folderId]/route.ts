@@ -5,8 +5,8 @@ import { getSession } from "@/lib/auth";
 import mongoose from "mongoose";
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { folderId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ folderId: string }> }
 ) {
   await dbConnect();
 
@@ -17,7 +17,10 @@ export async function PATCH(
       { status: 401 }
     );
   }
-const {folderId}= await params;
+
+  // ✅ unwrap params properly
+  const { folderId } = await context.params;
+
   const { documentName, imageUrl } = await req.json();
 
   if (!documentName || !imageUrl) {
@@ -35,7 +38,6 @@ const {folderId}= await params;
     );
   }
 
-  // ✅ Create new document with v1
   const newDocument = {
     _id: new mongoose.Types.ObjectId(),
     name: documentName,
@@ -43,6 +45,7 @@ const {folderId}= await params;
       {
         versionNumber: 1,
         image: imageUrl,
+        createdAt: new Date(),
       },
     ],
   };
