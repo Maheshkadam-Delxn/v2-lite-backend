@@ -146,7 +146,7 @@ import { getSession } from "@/lib/auth";
 /* ========================= PATCH ========================= */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { folderId: string } }
+  context: { params: Promise<{ folderId: string }> }
 ) {
   await dbConnect();
 
@@ -171,7 +171,8 @@ export async function PATCH(
     );
   }
 
-  const { folderId } = await params;
+  // ✅ unwrap params
+  const { folderId } = await context.params;
 
   const folder = await PlanFolder.findById(folderId);
   if (!folder) {
@@ -197,7 +198,6 @@ export async function PATCH(
     );
   }
 
-  // 🔥 Replace annotations
   version.annotations = annotations.map((a: any) => ({
     x: a.x,
     y: a.y,
@@ -213,10 +213,11 @@ export async function PATCH(
   });
 }
 
+
 /* ========================= GET ========================= */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { folderId: string } }
+  context: { params: Promise<{ folderId: string }> }
 ) {
   await dbConnect();
 
@@ -242,7 +243,8 @@ export async function GET(
     );
   }
 
-  const { folderId } = await params;
+  // ✅ unwrap params
+  const { folderId } = await context.params;
 
   const folder = await PlanFolder.findById(folderId).populate(
     "planDocuments.versions.annotations.createdBy",
@@ -277,3 +279,4 @@ export async function GET(
     annotations: version.annotations || [],
   });
 }
+
