@@ -18,5 +18,5 @@ const MaterialSchema = new Schema(
   { timestamps: true }
 );
 //sample
-delete mongoose.models.Material;
+// delete mongoose.models.Material;
 export default mongoose.models.Material || mongoose.model("Material", MaterialSchema);
