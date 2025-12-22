@@ -58,15 +58,15 @@ const {folderId}= await params;
 }
 
 export async function GET(
-  req: Request,
-  { params }: { params: { folderId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ folderId: string }> }
 ) {
   await dbConnect();
-  const {folderId}= await params;
 
-  const folder = await PlanFolder.findById(folderId).select(
-    "planDocuments"
-  );
+  // ✅ unwrap params properly
+  const { folderId } = await context.params;
+
+  const folder = await PlanFolder.findById(folderId).select("planDocuments");
 
   if (!folder) {
     return NextResponse.json(
