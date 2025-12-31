@@ -19,7 +19,7 @@ const NewTransactionSchema = new Schema(
   },
   { timestamps: true }
 );
-delete mongoose.models.NewTransaction;
+
 // ✅ Always use `models.Transaction` check
 const Transaction = models.NewTransaction || model("NewTransaction", NewTransactionSchema);
 

@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import Transaction from "@/models/NewTransaction";
-
+import '@/models/Vendor';
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccess } from "@/utils/permissions";
