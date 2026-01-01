@@ -1,4 +1,4 @@
-|-- .env
+|-- .env.local
 |-- .gitignore
 |-- app
     |-- api
@@ -39,6 +39,10 @@
             |-- route.ts
             |-- team
                 |-- route.ts
+        |-- annotation
+            |-- route.ts
+            |-- [id]
+                |-- route.ts
         |-- announcements
             |-- pin
                 |-- route.ts
@@ -76,6 +80,8 @@
             |-- route.ts
             |-- [id]
                 |-- route.ts
+                |-- version
+                    |-- route.ts
         |-- client
             |-- projects
                 |-- route.ts
@@ -96,10 +102,35 @@
         |-- materials
             |-- inventory
                 |-- route.ts
+            |-- materialPurchase
+                |-- route.ts
+            |-- materialReceived
+                |-- route.ts
+                |-- [projectId]
+                    |-- route.ts
+            |-- materialRequest
+                |-- route.ts
+                |-- [projectId]
+                    |-- route.ts
+            |-- materialUsed
+                |-- route.ts
+                |-- [projectId]
+                    |-- route.ts
+            |-- project
+                |-- [projectId]
+                    |-- route.ts
             |-- purchase
                 |-- route.ts
             |-- route.ts
             |-- [id]
+                |-- route.ts
+        |-- milestones
+            |-- route.ts
+            |-- [milestoneId]
+                |-- route.ts
+        |-- newTransaction
+            |-- route.ts
+            |-- [projectId]
                 |-- route.ts
         |-- notifications
             |-- mark-read
@@ -108,9 +139,23 @@
             |-- [id]
                 |-- route.ts
         |-- plan
+            |-- latest
+                |-- route.ts
             |-- route.ts
             |-- [id]
                 |-- route.ts
+        |-- plan-folders
+            |-- annotations
+                |-- [folderId]
+                    |-- route.ts
+            |-- document
+                |-- [folderId]
+                    |-- route.ts
+            |-- route.ts
+            |-- [id]
+                |-- route.ts
+        |-- project-type-with-survey
+            |-- route.ts
         |-- project-types
             |-- route.ts
             |-- [id]
@@ -244,15 +289,24 @@
 |-- models
     |-- Activity.ts
     |-- ActivityLog.ts
+    |-- Annotation.ts
     |-- Announcement.ts
     |-- Boq.ts
     |-- Document.ts
     |-- Folder.ts
     |-- Material.ts
+    |-- MaterialPurchase.ts
+    |-- MaterialReceived.ts
+    |-- MaterialRequest.ts
+    |-- MaterialUsed.ts
+    |-- Milestone.ts
+    |-- NewTransaction.ts
     |-- Notification.ts
     |-- NotificationPreference.ts
     |-- Organization.ts
     |-- Plan.ts
+    |-- PlanAnnotaion.ts
+    |-- PlanDocument.ts
     |-- Preference.ts
     |-- Project.ts
     |-- ProjectType.ts
