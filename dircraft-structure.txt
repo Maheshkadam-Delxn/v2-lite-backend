@@ -1,5 +1,3 @@
-.env.local
-.gitignore
 app/
   api/
     activity/
@@ -38,6 +36,10 @@ app/
         route.ts
       route.ts
       team/
+        route.ts
+    annotation/
+      route.ts
+      [id]/
         route.ts
     announcements/
       pin/
@@ -96,10 +98,31 @@ app/
     materials/
       inventory/
         route.ts
+      materialPurchase/
+        route.ts
+      materialReceived/
+        route.ts
+        [projectId]/
+          route.ts
+      materialRequest/
+        route.ts
+        [projectId]/
+          route.ts
+      materialUsed/
+        route.ts
+        [projectId]/
+          route.ts
+      project/
+        [projectId]/
+          route.ts
       purchase/
         route.ts
       route.ts
       [id]/
+        route.ts
+    newTransaction/
+      route.ts
+      [projectId]/
         route.ts
     notifications/
       mark-read/
@@ -107,6 +130,24 @@ app/
       route.ts
       [id]/
         route.ts
+    plan/
+      latest/
+        route.ts
+      route.ts
+      [id]/
+        route.ts
+    plan-folders/
+      annotations/
+        [folderId]/
+          route.ts
+      document/
+        [folderId]/
+          route.ts
+      route.ts
+      [id]/
+        route.ts
+    project-type-with-survey/
+      route.ts
     project-types/
       route.ts
       [id]/
@@ -218,6 +259,14 @@ app/
       route.ts
       [id]/
         route.ts
+    work-progress/
+      lock/
+        route.ts
+      route.ts
+      summary/
+        route.ts
+      [id]/
+        route.ts
   favicon.ico
   globals.css
   layout.tsx
@@ -226,6 +275,7 @@ app/
     page.tsx
 dircraft-structure.txt
 eslint.config.mjs
+filestructure.txt
 lib/
   auth.ts
   cloudinary.ts
@@ -240,14 +290,23 @@ middleware.ts
 models/
   Activity.ts
   ActivityLog.ts
+  Annotation.ts
   Announcement.ts
   Boq.ts
   Document.ts
   Folder.ts
   Material.ts
+  MaterialPurchase.ts
+  MaterialReceived.ts
+  MaterialRequest.ts
+  MaterialUsed.ts
+  NewTransaction.ts
   Notification.ts
   NotificationPreference.ts
   Organization.ts
+  Plan.ts
+  PlanAnnotaion.ts
+  PlanDocument.ts
   Preference.ts
   Project.ts
   ProjectType.ts
@@ -261,6 +320,7 @@ models/
   Transaction.ts
   User.ts
   Vendor.ts
+  WorkProgress.ts
 next-env.d.ts
 next.config.ts
 package-lock.json
