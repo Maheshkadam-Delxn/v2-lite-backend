@@ -1,4 +1,4 @@
-// models/Milestone.js
+// models/Milestone.js - Fixed spelling of "description" in SubtaskSchema
 import mongoose from "mongoose";
 
 /* =======================
@@ -10,7 +10,7 @@ const SubtaskSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    desription: {
+    description: {  // Fixed: Corrected spelling from "desription" to "description"
         type: String,   
     },
     startDate: {

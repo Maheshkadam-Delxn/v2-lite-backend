@@ -1,3 +1,4 @@
+// api/milestones/route.js - Fixed spelling in POST mapping
 import dbConnect from "@/lib/dbConnect";
 import Milestone from "@/models/Milestone";
 import { NextResponse } from "next/server";
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
 
       subtasks: subtasks?.map((subtask: any) => ({
         title: subtask.title,
-        desription: subtask.desription,
+        description: subtask.description,  // Fixed: Corrected spelling from "desription" to "description"
         startDate: subtask.startDate,
         endDate: subtask.endDate,
         assignedTo: subtask.assignedTo,
@@ -145,5 +146,3 @@ export async function GET(req: Request) {
     );
   }
 }
-
-
