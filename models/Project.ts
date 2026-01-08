@@ -8,7 +8,10 @@ const ProjectSchema = new Schema(
     projectCode: { type: String },
     location: { type: String },
     description: { type: String },
+    category:{type:String},
     startDate: { type: Date },
+    plans:[{type:Object}],
+    landArea:{type:String},
     endDate: { type: Date },
     projectImages:{type:String},
    projectDocuments: [{
@@ -24,7 +27,7 @@ const ProjectSchema = new Schema(
     selectedItems:[{type:String}],
 
 
-    projectType: { type: Schema.Types.ObjectId, ref: "ProjectType", required: true },
+    projectType: { type: Schema.Types.ObjectId, ref: "ProjectType"},
 rejectionReason:{type:String},
     manager: { type: Schema.Types.ObjectId, ref: "User", required: true },
     engineers: [{ type: Schema.Types.ObjectId, ref: "User" }],

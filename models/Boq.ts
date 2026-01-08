@@ -80,9 +80,12 @@ const BOQSchema = new mongoose.Schema(
     projectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
-      required: true
+     
     },
-
+projectTypeId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ProjectType",
+},
     builtUpArea: {
       type: Number,
       required: true,

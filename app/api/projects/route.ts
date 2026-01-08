@@ -413,7 +413,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log("Incoming body:", body);
 
-    if (!body.name || !body.projectType) {
+    if (!body.name) {
       return NextResponse.json(
         { success: false, message: "Project name and type are required" },
         { status: 400 }
@@ -422,7 +422,7 @@ export async function POST(req: Request) {
 
  
     let clientUser = await User.findOne({ email: body.clientEmail });
-
+console.log("clientUser",clientUser);
     if (!clientUser) {
       const randomPassword = generatePassword();
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
@@ -444,6 +444,11 @@ export async function POST(req: Request) {
         console.log("📭 Email skipped due to status: Proposal Under Approval");
       }
     }
+
+    if (body.projectType == null) {
+  body.needNewSiteSurvey = true;
+}
+
 
     // ✅ Step 2: Create project
     const project = await Project.create({

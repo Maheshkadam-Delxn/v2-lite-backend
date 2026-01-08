@@ -8,19 +8,17 @@ import { getSession } from "@/lib/auth";
 // ✅ CREATE Milestone (ALL FIELDS)
 export async function GET(req: Request,context: { params: Promise<{ projectId: string }> }) {
   await dbConnect();
-  const session = await getSession(req as any);
+const session = await getSession(req as any);
+
+  if (!session)
+    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
   console.log("Session in milestone POST:", session);
 
    const { projectId } = await context.params; 
 
-  // 🔐 Authorization
-  if (!session ) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 403 }
-    );
-  }
+ 
+ 
 
   try {
    

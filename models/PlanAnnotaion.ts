@@ -5,13 +5,13 @@ const { Schema } = mongoose;
 
 const AnnotationSchema = new Schema(
   {
-    x: { type: Number, required: true }, // relative (0–1)
-    y: { type: Number, required: true }, // relative (0–1)
+    x: { type: Number, required: true }, 
+    y: { type: Number, required: true },
     text: { type: String, required: true },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: true,   
     },
     createdAt: { type: Date, default: Date.now },
   },
@@ -37,9 +37,12 @@ const PlanFolderSchema = new Schema(
     projectId: {
       type: Schema.Types.ObjectId,
       ref: "Project",
-      required: true,
+    
     },
-
+projectTypeId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ProjectType",
+},
     // Documents inside this folder
     planDocuments: [
       {
