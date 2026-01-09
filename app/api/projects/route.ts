@@ -446,9 +446,9 @@ console.log("clientUser",clientUser);
     }
 
     if (body.projectType == null) {
-  body.needNewSiteSurvey = true;
+  body.needsNewSiteSurvey = true;
 }
-
+console
 
     // ✅ Step 2: Create project
     const project = await Project.create({
