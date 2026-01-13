@@ -50,7 +50,18 @@ status: {
       type: String,
       default: ""
     },
+    clientApproval: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],  
+      default: "pending"
+    },
 
+    contractorApproval: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],  
+      default: "pending"
+    },
+   
   laborCost: {
     type: Number,
     default: 0,
