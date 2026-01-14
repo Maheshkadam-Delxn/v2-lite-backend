@@ -8,6 +8,20 @@ const AnnotationSchema = new Schema(
     x: { type: Number, required: true }, 
     y: { type: Number, required: true },
     text: { type: String, required: true },
+     imageUri: {
+      type: String,
+      default: null, // Cloudinary image URL
+    },
+
+    /* -------- AUDIO -------- */
+    audioUri: {
+      type: String,
+      default: null, // Cloudinary audio URL
+    },
+     audioDuration: {
+      type: Number,
+      default: 0,
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",

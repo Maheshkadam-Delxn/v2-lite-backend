@@ -197,11 +197,14 @@ export async function PATCH(
       { status: 404 }
     );
   }
-
+console.log(annotations);
   version.annotations = annotations.map((a: any) => ({
     x: a.x,
     y: a.y,
     text: a.text,
+     imageUri: a.imageUri || null,
+    audioUri: a.audioUri || null,
+    audioDuration: a.audioDuration || 0,
     createdBy: session._id,
   }));
 
