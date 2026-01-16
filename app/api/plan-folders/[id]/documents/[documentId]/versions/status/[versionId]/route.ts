@@ -5,7 +5,13 @@ import { getSession } from "@/lib/auth";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string; documentId: string; versionId: string } }
+  { params }:{
+    params: Promise<{
+      id: string;
+      documentId: string;
+      versionId: string;
+    }>;
+  }
 ) {
   await dbConnect();
 
