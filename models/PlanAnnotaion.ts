@@ -5,10 +5,10 @@ const { Schema } = mongoose;
 
 const AnnotationSchema = new Schema(
   {
-    x: { type: Number, required: true }, 
+    x: { type: Number, required: true },
     y: { type: Number, required: true },
     text: { type: String, required: true },
-     imageUri: {
+    imageUri: {
       type: String,
       default: null, // Cloudinary image URL
     },
@@ -18,14 +18,14 @@ const AnnotationSchema = new Schema(
       type: String,
       default: null, // Cloudinary audio URL
     },
-     audioDuration: {
+    audioDuration: {
       type: Number,
       default: 0,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,   
+      required: true,
     },
     createdAt: { type: Date, default: Date.now },
   },
@@ -51,20 +51,44 @@ const PlanFolderSchema = new Schema(
     projectId: {
       type: Schema.Types.ObjectId,
       ref: "Project",
-    
+
     },
-projectTypeId:{
+    projectTypeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProjectType",
-},
+    },
     // Documents inside this folder
     planDocuments: [
       {
-        name:{type:String},
-        versions:[ {
-          versionNumber:{type:Number},
-          image:{type:String},
+        _id: { type: Schema.Types.ObjectId, auto: true },
+        name: { type: String },
+        versions: [{
+          versionNumber: { type: Number },
+          image: { type: String },
           annotations: [AnnotationSchema],
+          status: {
+            type: String,
+            enum: ["pending", "approved", "rejected"],
+            default: "pending", // 👈 when uploaded
+          },
+          rejectionReason: {
+            type: String,
+            default: null,
+          },
+          approvedBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+          },
+          rejectedBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+          },
+          approvedAt: { type: Date, default: null },
+          rejectedAt: { type: Date, default: null },
+          createdAt: { type: Date, default: Date.now },
+
         }],
       },
     ],

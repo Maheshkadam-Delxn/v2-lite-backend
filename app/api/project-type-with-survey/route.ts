@@ -60,14 +60,172 @@ console.log("this is data",siteSurvey);
       material,
       createdBy:  session._id,
     });
+function mapSurveyPayload(siteSurvey: any, projectTypeId: any) {
+  return {
+    projectTypeId,
+
+    surveyDate: new Date().toISOString(),
+
+    location: {
+      siteName: siteSurvey.siteName,
+      addressLine1: siteSurvey.addressLine1,
+      addressLine2: siteSurvey.addressLine2,
+      city: siteSurvey.city,
+      state: siteSurvey.state,
+      pincode: siteSurvey.pincode,
+      latitude: siteSurvey.latitude,
+      longitude: siteSurvey.longitude,
+      landmark: siteSurvey.landmark,
+    },
+
+    plotDetails: {
+      plotShape: siteSurvey.plotShape,
+      plotLength: siteSurvey.plotLength,
+      plotWidth: siteSurvey.plotWidth,
+      plotArea: siteSurvey.plotArea,
+      areaUnit: siteSurvey.areaUnit,
+      frontageWidth: siteSurvey.frontageWidth,
+      roadWidthFront: siteSurvey.roadWidthFront,
+      cornerPlot: siteSurvey.cornerPlot,
+      permissibleFSI: siteSurvey.permissibleFSI,
+      maxPermissibleHeight: siteSurvey.maxPermissibleHeight,
+    },
+
+    setbacks: {
+      setbackFront: siteSurvey.setbackFront,
+      setbackBack: siteSurvey.setbackBack,
+      setbackLeft: siteSurvey.setbackLeft,
+      setbackRight: siteSurvey.setbackRight,
+      setbackUnit: siteSurvey.setbackUnit,
+    },
+
+    topography: {
+      slopeDirection: siteSurvey.slopeDirection,
+      slopeGradient: siteSurvey.slopeGradient,
+      floodingHistory: siteSurvey.floodingHistory,
+      floodingRemarks: siteSurvey.floodingRemarks,
+    },
+
+    soil: {
+      soilType: siteSurvey.soilType,
+      soilRemark: siteSurvey.soilRemark,
+      rockPresence: siteSurvey.rockPresence,
+      rockDepthApprox: siteSurvey.rockDepthApprox,
+      waterTableDepthApprox: siteSurvey.waterTableDepthApprox,
+      contaminationSigns: siteSurvey.contaminationSigns,
+      contaminationRemarks: siteSurvey.contaminationRemarks,
+    },
+
+    surroundings: {
+      north: {
+        type: siteSurvey.northType,
+        description: siteSurvey.northDescription,
+      },
+      south: {
+        type: siteSurvey.southType,
+        description: siteSurvey.southDescription,
+      },
+      east: {
+        type: siteSurvey.eastType,
+        description: siteSurvey.eastDescription,
+      },
+      west: {
+        type: siteSurvey.westType,
+        description: siteSurvey.westDescription,
+      },
+
+      neighborhoodType: siteSurvey.neighborhoodType,
+      noiseLevel: siteSurvey.noiseLevel,
+      dustPollutionLevel: siteSurvey.dustPollutionLevel,
+      distanceToMainRoad: siteSurvey.distanceToMainRoad,
+      distanceToTransformer: siteSurvey.distanceToTransformer,
+      highTensionLine: siteSurvey.highTensionLine,
+      highTensionRemarks: siteSurvey.highTensionRemarks,
+    },
+
+    utilities: {
+      water: {
+        available: siteSurvey.waterAvailable,
+        source: siteSurvey.waterSource,
+        remarks: siteSurvey.waterRemarks,
+      },
+      electricity: {
+        available: siteSurvey.electricityAvailable,
+        phase: siteSurvey.electricityPhase,
+        meterInstalled: siteSurvey.meterInstalled,
+        remarks: siteSurvey.electricityRemarks,
+      },
+      sewage: {
+        available: siteSurvey.sewageAvailable,
+        type: siteSurvey.sewageType,
+        remarks: siteSurvey.sewageRemarks,
+      },
+      drain: {
+        available: siteSurvey.drainAvailable,
+        condition: siteSurvey.drainCondition,
+        remarks: siteSurvey.drainRemarks,
+      },
+      internet: {
+        available: siteSurvey.internetAvailable,
+        type: siteSurvey.internetType,
+        remarks: siteSurvey.internetRemarks,
+      },
+    },
+
+    access: {
+      mainEntryWidth: siteSurvey.mainEntryWidth,
+      accessRoadType: siteSurvey.accessRoadType,
+      accessRoadCondition: siteSurvey.accessRoadCondition,
+      heavyVehicleAccess: siteSurvey.heavyVehicleAccess,
+      craneAccess: siteSurvey.craneAccess,
+      materialStorageAvailable: siteSurvey.materialStorageAvailable,
+      materialStorageArea: siteSurvey.materialStorageArea,
+      remarks: siteSurvey.accessRemarks,
+    },
+
+    existingStructures: {
+      hasExistingStructure: siteSurvey.hasExistingStructure,
+      structureType: siteSurvey.structureType,
+      noOfFloors: siteSurvey.noOfFloors,
+      approximateAge: siteSurvey.approximateAge,
+      structuralCondition: siteSurvey.structuralCondition,
+      demolitionRequired: siteSurvey.demolitionRequired,
+      partialDemolition: siteSurvey.partialDemolition,
+      demolitionRemarks: siteSurvey.demolitionRemarks,
+    },
+
+    risks: {
+      legalDispute: siteSurvey.legalDispute,
+      legalDisputeRemarks: siteSurvey.legalDisputeRemarks,
+      encroachment: siteSurvey.encroachment,
+      encroachmentRemarks: siteSurvey.encroachmentRemarks,
+      heritageZone: siteSurvey.heritageZone,
+      restrictedHeight: siteSurvey.restrictedHeight,
+      remarks: siteSurvey.risksRemarks,
+    },
+
+    photos: siteSurvey.photos || [],
+    measurements: siteSurvey.measurements || [],
+    observations: siteSurvey.observations || [],
+
+    review: {
+      status: siteSurvey.reviewStatus,
+      remarks: siteSurvey.reviewRemarks,
+    },
+  };
+}
 
     /* ----------------- PREPARE SURVEY DATA ----------------- */
-    const surveyPayload = {
-      ...siteSurvey,
-      projectTypeId: projectType._id, // 🔥 LINK HERE
-    };
+    // const surveyPayload = {
+    //   ...siteSurvey,
+    //   projectTypeId: projectType._id, // 🔥 LINK HERE
+    // };
 
-    const survey = await Survey.create(surveyPayload);
+    // const survey = await Survey.create(surveyPayload);
+    const surveyPayload = mapSurveyPayload(siteSurvey, projectType._id);
+
+const survey = await Survey.create(surveyPayload);
+
 let createdBOQs = [];
 
 if (Array.isArray(boqs) && boqs.length > 0) {
@@ -102,6 +260,7 @@ if (Array.isArray(plansData) && plansData.length > 0) {
       versions: doc.versions.map((v: any) => ({
         versionNumber: v.versionNumber,
         image: v.image,
+        status: v.status || "approved",
         annotations: v.annotations || [],
         createdAt: new Date(),
       })),
