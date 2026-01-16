@@ -190,8 +190,37 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     }
 
     console.log("Received updates for project:", id, updates);
-    console.log("Project after update:", isNowApproved, project.projectType._id);
+    // console.log("Project after update:", isNowApproved, project.projectType._id);
 
+    function calculateEndDateFromISO(startDateISO: string, estimatedDays: number) {
+  const startDate = new Date(startDateISO);
+
+  if (isNaN(startDate.getTime())) {
+    throw new Error("Invalid startDate");
+  }
+
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + estimatedDays);
+
+  return endDate.toISOString();
+}
+
+if (
+  isNowApproved &&
+  project.startDate &&
+  project.projectType?.estimated_days
+) {
+  const endDateISO = calculateEndDateFromISO(
+    project.startDate,
+    project.projectType.estimated_days
+  );
+
+  project.endDate = endDateISO;
+  await project.save();
+
+  console.log("Start Date:", project.startDate);
+  console.log("End Date:", project.endDate);
+}
     if (isNowApproved && project.projectType) {
       // Use .lean() for better performance and plain objects
       const boqTemplates = await BOQ.find({
@@ -304,43 +333,71 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       }
 
 
-     // 3. Clone Survey templates (keep everything as is from template)
-const surveyTemplates = await Survey.find({
-  projectTypeId: project.projectType._id,
-  projectId: { $exists: false },
-}).lean();
+      // 3. Clone Survey templates (keep everything as is from template)
+      const surveyTemplates = await Survey.find({
+        projectTypeId: project.projectType._id,
+        projectId: { $exists: false },
+      }).lean();
 
-console.log(`Found ${surveyTemplates.length} Survey templates for project type`);
+      console.log(`Found ${surveyTemplates.length} Survey templates for project type`);
 
-if (surveyTemplates.length > 0) {
-  const surveysToInsert = surveyTemplates.map((template: any) => {
-    const newSurvey = JSON.parse(JSON.stringify(template));
+      if (surveyTemplates.length > 0) {
+        const surveysToInsert = surveyTemplates.map((template: any) => {
+          const newSurvey = JSON.parse(JSON.stringify(template));
 
-    // Remove main IDs and timestamps
-    delete newSurvey._id;
-    delete newSurvey.createdAt;
-    delete newSurvey.updatedAt;
-    delete newSurvey.__v;
+          // Remove main IDs and timestamps
+          delete newSurvey._id;
+          delete newSurvey.createdAt;
+          delete newSurvey.updatedAt;
+          delete newSurvey.__v;
 
-    // Update project reference
-    newSurvey.projectId = project._id;
-    newSurvey.status = "completed"; // or whatever default status you want
-    
-    // Update createdBy if field exists (your schema doesn't have this field)
-    // newSurvey.createdBy = session._id; // Only if your schema has createdBy field
+          // Update project reference
+          newSurvey.projectId = project._id;
+          newSurvey.status = "completed"; // or whatever default status you want
 
-    return newSurvey;
-  });
+          // Update createdBy if field exists (your schema doesn't have this field)
+          // newSurvey.createdBy = session._id; // Only if your schema has createdBy field
 
-  const createdSurveys = await Survey.insertMany(surveysToInsert);
-  console.log(`Successfully created ${createdSurveys.length} Survey templates`);
-}
+          return newSurvey;
+        });
+
+        const createdSurveys = await Survey.insertMany(surveysToInsert);
+        console.log(`Successfully created ${createdSurveys.length} Survey templates`);
+      }
 
 
 
 
     }
 
+    if (project.plans) {
+      const planFolders = project.plans.map((plan: any) => ({
+        name: plan.planName,          // ✅ folder name
+        parentFolder: null,
+        projectId: project._id,
+       
+        planDocuments: [
+          {
+            name: "Document",         // ✅ document name
+            versions: [
+              {
+                versionNumber: 1,
+                image: plan.planFileUrl,
+                annotations: [],
+                status: "approved",
+                createdAt: new Date(),
+              },
+            ],
+          },
+        ],
+        createdBy: session._id,
+      }));
+
+      await PlanFolder.insertMany(planFolders);
+      console.log(`Inserted ${planFolders.length} plan folders for project ${project._id}`);
+
+
+    }
     return NextResponse.json({
       success: true,
       message: "Project updated successfully",
@@ -360,7 +417,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
   await dbConnect();
   const session = await getSession(req as any);
 
-  if (!session ) {
+  if (!session) {
     return NextResponse.json({ success: false, message: "Only admin can delete projects" }, { status: 403 });
   }
 
