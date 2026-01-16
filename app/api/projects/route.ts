@@ -42,7 +42,7 @@
 //             <tr>
 //               <td style="padding: 40px 20px;">
 //                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
-                  
+
 //                   <!-- Header -->
 //                   <tr>
 //                     <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
@@ -51,18 +51,18 @@
 //                       </h1>
 //                     </td>
 //                   </tr>
-                  
+
 //                   <!-- Body -->
 //                   <tr>
 //                     <td style="padding: 40px;">
 //                       <p style="margin: 0 0 24px; color: #1a202c; font-size: 16px; line-height: 1.6;">
 //                         Hi <strong>${name}</strong>,
 //                       </p>
-                      
+
 //                       <p style="margin: 0 0 24px; color: #4a5568; font-size: 15px; line-height: 1.6;">
 //                         Great news! A new project has been created for you in our Project Management System. Your dedicated client portal is now ready, giving you real-time access to project updates, milestones, and deliverables.
 //                       </p>
-                      
+
 //                       <!-- Credentials Card -->
 //                       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f7fafc; border-radius: 8px; border-left: 4px solid #667eea; margin: 24px 0;">
 //                         <tr>
@@ -70,7 +70,7 @@
 //                             <p style="margin: 0 0 16px; color: #2d3748; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
 //                               🔐 Your Login Credentials
 //                             </p>
-                            
+
 //                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
 //                               <tr>
 //                                 <td style="padding: 8px 0;">
@@ -88,10 +88,10 @@
 //                           </td>
 //                         </tr>
 //                       </table>
-                      
-                 
-                     
-                      
+
+
+
+
 //                       <!-- Security Notice -->
 //                       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #fffbeb; border-radius: 8px; border: 1px solid #fbbf24; margin: 24px 0;">
 //                         <tr>
@@ -102,13 +102,13 @@
 //                           </td>
 //                         </tr>
 //                       </table>
-                      
+
 //                       <p style="margin: 24px 0 0; color: #4a5568; font-size: 15px; line-height: 1.6;">
 //                         If you have any questions or need assistance, our team is here to help.
 //                       </p>
 //                     </td>
 //                   </tr>
-                  
+
 //                   <!-- Footer -->
 //                   <tr>
 //                     <td style="padding: 32px 40px; background-color: #f7fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e2e8f0;">
@@ -118,15 +118,15 @@
 //                       <p style="margin: 0 0 16px; color: #4a5568; font-size: 14px;">
 //                         Project Management Team
 //                       </p>
-                      
+
 //                       <p style="margin: 16px 0 0; color: #a0aec0; font-size: 12px; line-height: 1.5;">
 //                         This is an automated message. Please do not reply to this email.
 //                       </p>
 //                     </td>
 //                   </tr>
-                  
+
 //                 </table>
-                
+
 //                 <!-- Footer Text -->
 //                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 20px auto 0;">
 //                   <tr>
@@ -137,7 +137,7 @@
 //                     </td>
 //                   </tr>
 //                 </table>
-                
+
 //               </td>
 //             </tr>
 //           </table>
@@ -250,7 +250,7 @@ import User from "@/models/User";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccess } from "@/utils/permissions";
-import "@/models/ProjectType";    
+import "@/models/ProjectType";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
 
@@ -403,9 +403,9 @@ export async function POST(req: Request) {
   await dbConnect();
   const session = await getSession(req as any);
 
-  console.log("asdfe",session);
+  console.log("asdfe", session);
 
-  if (!session ) {
+  if (!session) {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 });
   }
 
@@ -420,9 +420,9 @@ export async function POST(req: Request) {
       );
     }
 
- 
+
     let clientUser = await User.findOne({ email: body.clientEmail });
-console.log("clientUser",clientUser);
+    console.log("clientUser", clientUser);
     if (!clientUser) {
       const randomPassword = generatePassword();
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
@@ -432,8 +432,8 @@ console.log("clientUser",clientUser);
         email: body.clientEmail,
         phone: body.clientPhone,
         password: hashedPassword,
-        isEmailVerified:true,
-        newpassRequired:true,
+        isEmailVerified: true,
+        newpassRequired: true,
         role: "client",
       });
 
@@ -446,15 +446,15 @@ console.log("clientUser",clientUser);
     }
 
     if (body.projectType == null) {
-  body.needsNewSiteSurvey = true;
-}
-console
+      body.needsNewSiteSurvey = true;
+    }
+
 
     // ✅ Step 2: Create project
     const project = await Project.create({
       ...body,
       manager: session._id,
-      createdBy:session._id,
+      createdBy: session._id,
       status: body.status || "ongoing",
     });
 
@@ -471,7 +471,7 @@ console
   } catch (error: any) {
     console.error("Error creating project:", error.message);
     return NextResponse.json(
-      { success: false, message: "Server error while creating project" },
+      { success: false, message: "Server error while creating project", error: error.message },
       { status: 500 }
     );
   }
@@ -480,8 +480,8 @@ console
 export async function GET(req: Request) {
   await dbConnect();
   const session = await getSession(req as any);
-console.log("asdfasdfe",session);
-  if (!session ) {
+  console.log("asdfasdfe", session);
+  if (!session) {
     return NextResponse.json({ success: false, message: "Unauthorized data" }, { status: 403 });
   }
 

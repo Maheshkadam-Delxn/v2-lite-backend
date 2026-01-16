@@ -148,6 +148,10 @@ import PlanFolder from "@/models/PlanAnnotaion";
 
 import Survey from "@/models/Survey";
 
+import Notification from "@/models/Notification";
+import Transaction from "@/models/NewTransaction";
+import mongoose from "mongoose";
+
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   await dbConnect();
   const session = await getSession(req as any);
@@ -159,13 +163,53 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   const { id } = await context.params;
 
   try {
-    const project = await Project.findById(id).populate("manager engineers projectType");
+    const project = await Project.findById(id).populate("manager engineers projectType").lean();
+
     if (!project) {
       return NextResponse.json({ success: false, message: "Project not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: project });
+    // --- Calculate Total Expenses ---
+    const totalExpenseResult = await Transaction.aggregate([
+      { $match: { projectId: new mongoose.Types.ObjectId(id) } },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+    const totalExpenses = totalExpenseResult[0]?.total || 0;
+
+    // --- Calculate Time Stats ---
+    let daysElapsed = 0;
+    let totalDuration = 0;
+
+    const projectData = project as any; // Cast to any to avoid strict type checks on startDate/endDate
+
+    if (projectData.startDate && projectData.endDate) {
+      const start = new Date(projectData.startDate).getTime();
+      const end = new Date(projectData.endDate).getTime();
+      const now = Date.now();
+
+      const oneDay = 1000 * 60 * 60 * 24;
+
+      totalDuration = Math.ceil((end - start) / oneDay);
+      daysElapsed = Math.ceil((now - start) / oneDay);
+
+      // Clamping values
+      if (daysElapsed < 0) daysElapsed = 0;
+      if (typeof totalDuration === 'number' && totalDuration < 0) totalDuration = 0;
+    }
+
+    // Return enriched data
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...project,
+        totalExpenses,
+        daysElapsed,
+        totalDuration
+      }
+    });
+
   } catch (error: any) {
+    console.error("Error fetching project:", error);
     return NextResponse.json({ success: false, message: "Invalid project ID" }, { status: 400 });
   }
 }
@@ -183,7 +227,38 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
   try {
     const isNowApproved = updates.status === "Ongoing";
+
+    // Fetch original project to compare dates BEFORE update (or capture current state)
+    // Actually, findByIdAndUpdate returns the *original* document by default unless {new: true} is passed.
+    // But here {new: true} IS passed. So we need the original first or compare differently.
+    // Let's rely on the fact that we need the OLD date.
+
+    const existingProject = await Project.findById(id);
+    const oldEndDate = existingProject?.endDate;
+
     const project = await Project.findByIdAndUpdate(id, updates, { new: true }).populate("manager engineers projectType");
+
+    // --- Time Duration Extend Alert ---
+    if (existingProject && updates.endDate) {
+      const newEndDate = new Date(updates.endDate);
+      const originalEndDate = new Date(oldEndDate);
+
+      if (newEndDate > originalEndDate) {
+        try {
+          await Notification.create({
+            userId: project.manager._id, // Assuming populated
+            title: "Project Timeline Extended",
+            message: `Project "${project.name}" timeline has been extended from ${originalEndDate.toDateString()} to ${newEndDate.toDateString()}.`,
+            type: "alert",
+            link: `/projects/${project._id}`
+          });
+          console.log("Time extension notification sent.");
+        } catch (err) {
+          console.error("Error sending time extension notification:", err);
+        }
+      }
+    }
+    // ----------------------------------
 
     if (!project) {
       return NextResponse.json({ success: false, message: "Project not found" }, { status: 404 });
@@ -304,37 +379,37 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       }
 
 
-     // 3. Clone Survey templates (keep everything as is from template)
-const surveyTemplates = await Survey.find({
-  projectTypeId: project.projectType._id,
-  projectId: { $exists: false },
-}).lean();
+      // 3. Clone Survey templates (keep everything as is from template)
+      const surveyTemplates = await Survey.find({
+        projectTypeId: project.projectType._id,
+        projectId: { $exists: false },
+      }).lean();
 
-console.log(`Found ${surveyTemplates.length} Survey templates for project type`);
+      console.log(`Found ${surveyTemplates.length} Survey templates for project type`);
 
-if (surveyTemplates.length > 0) {
-  const surveysToInsert = surveyTemplates.map((template: any) => {
-    const newSurvey = JSON.parse(JSON.stringify(template));
+      if (surveyTemplates.length > 0) {
+        const surveysToInsert = surveyTemplates.map((template: any) => {
+          const newSurvey = JSON.parse(JSON.stringify(template));
 
-    // Remove main IDs and timestamps
-    delete newSurvey._id;
-    delete newSurvey.createdAt;
-    delete newSurvey.updatedAt;
-    delete newSurvey.__v;
+          // Remove main IDs and timestamps
+          delete newSurvey._id;
+          delete newSurvey.createdAt;
+          delete newSurvey.updatedAt;
+          delete newSurvey.__v;
 
-    // Update project reference
-    newSurvey.projectId = project._id;
-    newSurvey.status = "completed"; // or whatever default status you want
-    
-    // Update createdBy if field exists (your schema doesn't have this field)
-    // newSurvey.createdBy = session._id; // Only if your schema has createdBy field
+          // Update project reference
+          newSurvey.projectId = project._id;
+          newSurvey.status = "completed"; // or whatever default status you want
 
-    return newSurvey;
-  });
+          // Update createdBy if field exists (your schema doesn't have this field)
+          // newSurvey.createdBy = session._id; // Only if your schema has createdBy field
 
-  const createdSurveys = await Survey.insertMany(surveysToInsert);
-  console.log(`Successfully created ${createdSurveys.length} Survey templates`);
-}
+          return newSurvey;
+        });
+
+        const createdSurveys = await Survey.insertMany(surveysToInsert);
+        console.log(`Successfully created ${createdSurveys.length} Survey templates`);
+      }
 
 
 
@@ -360,7 +435,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
   await dbConnect();
   const session = await getSession(req as any);
 
-  if (!session ) {
+  if (!session) {
     return NextResponse.json({ success: false, message: "Only admin can delete projects" }, { status: 403 });
   }
 
