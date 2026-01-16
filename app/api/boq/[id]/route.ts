@@ -92,11 +92,11 @@
 
 import dbConnect from "@/lib/dbConnect";
 import BOQ from "@/models/Boq";
-import { NextResponse } from "next/server";
+import { NextResponse ,NextRequest} from "next/server";
 import { getSession } from "@/lib/auth";
 
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   context: { params: { id: string } }
 ) {
   await dbConnect();
