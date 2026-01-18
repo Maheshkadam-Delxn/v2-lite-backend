@@ -493,7 +493,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
   const session = await getSession(req as any);
 
   if (!session) {
-    return NextResponse.json({ success: false, message: "Only admin can delete projects" }, { status: 403 });
+    return NextResponse.json({ success: false, message: "Permission Restricted" }, { status: 403 });
   }
 
   const { id } = await context.params;
