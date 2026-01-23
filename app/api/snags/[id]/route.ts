@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/dbConnect";
 import Snag from "@/models/Snag";
 import ActivityLog from "@/models/ActivityLog";
+import "@/models/WorkProgress"; // ✅ Register model for population
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccess } from "@/utils/permissions";
@@ -28,7 +29,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     return NextResponse.json({ success: true, data: snag });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
+    console.error("❌ Error fetching snag details:", error);
+    return NextResponse.json({ success: false, message: "Server error", error: error.message }, { status: 500 });
   }
 }
 

@@ -79,6 +79,13 @@ export async function GET(req: Request) {
       .populate("assignedTo", "name email")
       .sort({ createdAt: -1 });
 
+    console.log("🛠️ Fetched Snags:", JSON.stringify(snags.map(s => ({
+      id: s._id,
+      title: s.title,
+      status: s.status,
+      projectId: s.projectId
+    })), null, 2));
+
     return NextResponse.json({ success: true, data: snags });
   } catch (error: any) {
     console.error("Error fetching snags:", error.message);
