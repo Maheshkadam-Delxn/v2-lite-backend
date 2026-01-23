@@ -11,28 +11,32 @@ const WorkProgressSchema = new Schema(
       index: true,
     },
 
-    // Optional task reference (loose coupling)
-    taskId: {
+    // 📍 Structural References (Optional)
+    milestoneId: {
       type: Schema.Types.ObjectId,
-      ref: "Task",
+      ref: "Milestone",
+      required: false,
+    },
+    subtaskId: {
+      type: Schema.Types.ObjectId,
       required: false,
     },
 
     // 📅 Progress Date (1 entry per day recommended)
-    progressDate: {
+    date: {
       type: Date,
       required: true,
       index: true,
     },
 
-    // 📝 Description of work done
-    workDescription: {
+    // 📝 Details
+    description: {
       type: String,
       trim: true,
       required: true,
     },
 
-    // 📊 Progress %
+    // 📊 Progress % achievement for the day
     progressPercent: {
       type: Number,
       min: 0,
@@ -41,12 +45,7 @@ const WorkProgressSchema = new Schema(
     },
 
     // 📸 Proof of work
-    photos: [
-      {
-        url: { type: String, required: true },
-        caption: { type: String },
-      },
-    ],
+    photos: [{ type: String }],
 
     // ⚠️ Issues / blockers (optional)
     issues: {
@@ -55,7 +54,7 @@ const WorkProgressSchema = new Schema(
     },
 
     // 👤 Audit
-    reportedBy: {
+    createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -75,7 +74,7 @@ const WorkProgressSchema = new Schema(
  * - Only ONE progress entry per project per day
  */
 WorkProgressSchema.index(
-  { projectId: 1, progressDate: 1 },
+  { projectId: 1, date: 1 },
   { unique: true }
 );
 

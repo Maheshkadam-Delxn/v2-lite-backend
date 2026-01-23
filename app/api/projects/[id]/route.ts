@@ -226,6 +226,23 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   const updates = await req.json();
 
   try {
+    // 🔒 Handover Gate: Block completion if High/Critical snags are open
+    if (updates.status === "Completed") {
+      const Snag = (await import("@/models/Snag")).default;
+      const openCriticalSnags = await Snag.countDocuments({
+        projectId: id,
+        severity: { $in: ["high", "critical"] },
+        status: { $ne: "closed" }
+      });
+
+      if (openCriticalSnags > 0) {
+        return NextResponse.json({
+          success: false,
+          message: `Cannot complete project. There are ${openCriticalSnags} open High/Critical snags that must be closed first.`
+        }, { status: 400 });
+      }
+    }
+
     const isNowApproved = updates.status === "Ongoing";
 
     // Fetch original project to compare dates BEFORE update (or capture current state)
@@ -268,34 +285,34 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     // console.log("Project after update:", isNowApproved, project.projectType._id);
 
     function calculateEndDateFromISO(startDateISO: string, estimatedDays: number) {
-  const startDate = new Date(startDateISO);
+      const startDate = new Date(startDateISO);
 
-  if (isNaN(startDate.getTime())) {
-    throw new Error("Invalid startDate");
-  }
+      if (isNaN(startDate.getTime())) {
+        throw new Error("Invalid startDate");
+      }
 
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + estimatedDays);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + estimatedDays);
 
-  return endDate.toISOString();
-}
+      return endDate.toISOString();
+    }
 
-if (
-  isNowApproved &&
-  project.startDate &&
-  project.projectType?.estimated_days
-) {
-  const endDateISO = calculateEndDateFromISO(
-    project.startDate,
-    project.projectType.estimated_days
-  );
+    if (
+      isNowApproved &&
+      project.startDate &&
+      project.projectType?.estimated_days
+    ) {
+      const endDateISO = calculateEndDateFromISO(
+        project.startDate,
+        project.projectType.estimated_days
+      );
 
-  project.endDate = endDateISO;
-  await project.save();
+      project.endDate = endDateISO;
+      await project.save();
 
-  console.log("Start Date:", project.startDate);
-  console.log("End Date:", project.endDate);
-}
+      console.log("Start Date:", project.startDate);
+      console.log("End Date:", project.endDate);
+    }
     if (isNowApproved && project.projectType) {
       // Use .lean() for better performance and plain objects
       const boqTemplates = await BOQ.find({
@@ -450,7 +467,7 @@ if (
         name: plan.planName,          // ✅ folder name
         parentFolder: null,
         projectId: project._id,
-       
+
         planDocuments: [
           {
             name: "Document",         // ✅ document name
