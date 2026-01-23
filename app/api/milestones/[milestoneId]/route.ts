@@ -1,6 +1,7 @@
 // app/api/milestones/[milestoneId]/route.ts
 import dbConnect from "@/lib/dbConnect";
 import Milestone from "@/models/Milestone";
+
 // Temporarily comment out these imports & populates to isolate the issue
 // import Project from "@/models/Project";
 // import User from "@/models/User";
@@ -111,11 +112,11 @@ export async function PUT(
 
     if (Array.isArray(subtasks) && subtasks.length > 0) {
       const existingSubtasks = milestone.subtasks || [];
-      
+
       subtasks.forEach((incomingSubtask: any) => {
         const subId = incomingSubtask._id ? incomingSubtask._id : new mongoose.Types.ObjectId();
         const existingIndex = existingSubtasks.findIndex((s: any) => s._id.toString() === subId.toString());
-        
+
         const updatedSubtask = {
           _id: subId,
           title: incomingSubtask.title || (existingIndex !== -1 ? existingSubtasks[existingIndex].title : 'Untitled Subtask'),
@@ -136,6 +137,8 @@ export async function PUT(
 
       milestone.subtasks = existingSubtasks;
     }
+
+
 
     const updatedMilestone = await milestone.save();
 
