@@ -4,7 +4,7 @@ export interface IRisk extends Document {
     projectId: mongoose.Types.ObjectId;
     title: string;
     description?: string;
-    category?: 'Safety' | 'Financial' | 'Timeline' | 'Quality';
+    category?: 'Safety' | 'Financial' | 'Timeline' | 'Quality' | 'Schedule' | 'Design';
     severity?: 'Low' | 'Medium' | 'High' | 'Critical';
     likelihood?: number; // 1-5
     impact?: number; // 1-5
@@ -33,7 +33,7 @@ const RiskSchema = new Schema<IRisk>(
         },
         category: {
             type: String,
-            enum: ['Safety', 'Financial', 'Timeline', 'Quality'],
+            enum: ['Safety', 'Financial', 'Timeline', 'Quality', 'Schedule', 'Design'],
         },
         severity: {
             type: String,
@@ -88,5 +88,6 @@ RiskSchema.pre("save", function (next) {
     }
     next();
 });
-
+ 
+delete mongoose.models.Risk;
 export default mongoose.models.Risk || mongoose.model<IRisk>("Risk", RiskSchema);
