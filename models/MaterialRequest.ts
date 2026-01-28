@@ -17,5 +17,5 @@ const MaterialRequestSchema = new Schema(
   { timestamps: true }
 );
 //sample
-delete mongoose.models.MaterialRequest;
+// delete mongoose.models.MaterialRequest;
 export default mongoose.models.MaterialRequest || mongoose.model("MaterialRequest", MaterialRequestSchema);

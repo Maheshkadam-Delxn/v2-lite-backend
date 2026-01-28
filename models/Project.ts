@@ -52,6 +52,6 @@ rejectionReason:{type:String},
   },
   { timestamps: true }
 );
-delete mongoose.models.Project;
+// delete mongoose.models.Project;
 
 export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);

@@ -19,5 +19,5 @@ const MaterialPurchaseSchema = new Schema(
   { timestamps: true }
 );
 //sample
-delete mongoose.models.MaterialPurchase;
+// delete mongoose.models.MaterialPurchase;
 export default mongoose.models.MaterialPurchase || mongoose.model("MaterialPurchase", MaterialPurchaseSchema);

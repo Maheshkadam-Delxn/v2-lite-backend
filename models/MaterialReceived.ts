@@ -18,5 +18,5 @@ const MaterialReceivedSchema = new Schema(
   { timestamps: true }
 );
 //sample
-delete mongoose.models.MaterialReceived;
+// delete mongoose.models.MaterialReceived;
 export default mongoose.models.MaterialReceived || mongoose.model("MaterialReceived", MaterialReceivedSchema);
