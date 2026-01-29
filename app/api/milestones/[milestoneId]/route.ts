@@ -7,6 +7,7 @@ import Milestone from "@/models/Milestone";
 // import User from "@/models/User";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/utils/permissions";
 import mongoose from "mongoose";
 
 export async function GET(
@@ -181,9 +182,9 @@ export async function DELETE(
   const { milestoneId } = await params;
   console.log("DELETE milestoneId:", milestoneId);
 
-  if (!session) {
+  if (!session || !isAdmin(session.role)) {
     return NextResponse.json(
-      { success: false, message: "Unauthorized" },
+      { success: false, message: "Only admin can delete milestones" },
       { status: 403 }
     );
   }
