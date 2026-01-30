@@ -37,6 +37,15 @@ rejectionReason:{type:String},
       default: "ongoing",
     },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    handover:{
+      handoverRequested: { type: Boolean, default: false },
+      handoverDate: { type: Date },
+      handoverBy: { type: Schema.Types.ObjectId, ref: "User" },
+      handoverAccepted: { type: Boolean, default: false },
+      handoverAcceptedDate: { type: Date },
+      handoverAcceptedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    },
+    handoverDocuments:[{type:String}],
     versionDetails: {
       currentVersion: { type: String },
       lastUpdated: { type: Date },
@@ -52,6 +61,6 @@ rejectionReason:{type:String},
   },
   { timestamps: true }
 );
-// delete mongoose.models.Project;
+delete mongoose.models.Project;
 
 export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);
