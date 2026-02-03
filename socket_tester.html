@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Test Client</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .status {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .log-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>⚡ Socket.IO Test Client</h2>
+
+    <div id="status" class="status disconnected">Status: Disconnected</div>
+
+    <div class="controls">
+        <label>Server URL:</label>
+        <input type="text" id="serverUrl" value="https://lite-express-socketio.onrender.com" style="width: 250px;">
+
+        <br><br>
+        <label>Auth Token (Optional):</label>
+        <input type="text" id="token" placeholder="Paste JWT Token here" style="width: 250px;">
+
+        <br><br>
+        <button onclick="connectSocket()">Connect</button>
+        <button onclick="disconnectSocket()">Disconnect</button>
+    </div>
+
+    <div>
+        <h3>Emit Event</h3>
+        <input type="text" id="eventName" placeholder="Event Name (e.g. join_room)" value="join_room">
+        <input type="text" id="eventData" placeholder='JSON Data (e.g. {"roomId":"123"})' value='{"roomId":"123"}'>
+        <button onclick="sendEvent()">Send</button>
+    </div>
+
+    <h3>Logs</h3>
+    <div id="logs" class="log-box"></div>
+
+    <script>
+        let socket;
+
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            entry.innerText = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.prepend(entry);
+        }
+
+        function connectSocket() {
+            if (socket) socket.disconnect();
+
+            const url = document.getElementById('serverUrl').value;
+            const token = document.getElementById('token').value;
+
+            const options = {
+                transports: ['websocket', 'polling'],
+                withCredentials: true // Important for cookies
+            };
+
+            // If token is provided manually, pass it in auth object
+            if (token) {
+                options.auth = { token: token };
+            }
+
+            log(`Connecting to ${url}...`);
+
+            socket = io(url, options);
+
+            socket.on('connect', () => {
+                document.getElementById('status').className = 'status connected';
+                document.getElementById('status').innerText = 'Status: Connected (ID: ' + socket.id + ')';
+                log('✅ Connected!', 'success');
+            });
+
+            socket.on('connect_error', (err) => {
+                document.getElementById('status').className = 'status disconnected';
+                document.getElementById('status').innerText = 'Status: Connection Error';
+                log('❌ Connection Error: ' + err.message, 'error');
+            });
+
+            socket.on('disconnect', () => {
+                document.getElementById('status').className = 'status disconnected';
+                document.getElementById('status').innerText = 'Status: Disconnected';
+                log('🔌 Disconnected');
+            });
+
+            // Listen for any event (wildcard equivalent-ish for debug)
+            socket.onAny((event, ...args) => {
+                log(`📥 Received '${event}': ${JSON.stringify(args)}`);
+            });
+        }
+
+        function disconnectSocket() {
+            if (socket) socket.disconnect();
+        }
+
+        function sendEvent() {
+            if (!socket || !socket.connected) {
+                log('❌ Not connected', 'error');
+                return;
+            }
+            const name = document.getElementById('eventName').value;
+            const dataStr = document.getElementById('eventData').value;
+
+            try {
+                const data = JSON.parse(dataStr);
+                socket.emit(name, data);
+                log(`📤 Sent '${name}': ${dataStr}`);
+            } catch (e) {
+                log('❌ Invalid JSON data', 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

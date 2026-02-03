@@ -28,8 +28,13 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 
 export async function signToken(payload: any) {
+  // Defensive: Ensure _id is a string, not a Mongoose ObjectId 
+  // to prevent weird buffer serialization in JWT
+  if (payload._id && typeof payload._id !== 'string') {
+    payload._id = payload._id.toString();
+  }
 
-  const tt=await new SignJWT(payload)
+  const tt = await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
     .sign(JWT_SECRET);
