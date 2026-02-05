@@ -69,6 +69,10 @@
 //     },
 //   });
 // }
+
+
+
+
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import Role from "@/models/Role";
@@ -102,7 +106,7 @@ export async function POST(req: Request) {
       { success: false, message: "User not found" },
       { status: 404 }
     );
-
+console.log("this is user data",user);
   // ------------------------------
   // CHECK EMAIL VERIFIED
   // ------------------------------
@@ -167,8 +171,10 @@ export async function POST(req: Request) {
     }
 
     permissions = roleDoc.permissions;
-  }
 
+  }
+ const assignedProjects = user.assignedProjects || [];
+ console.log("assignedProjects",assignedProjects);
   // ------------------------------
   // FINAL RESPONSE
   // ------------------------------
@@ -182,7 +188,9 @@ export async function POST(req: Request) {
         name: user.name,
         email: user.email,
         role: user.role,
-        permissions, // null for admin/client, object for other roles
+        permissions,
+          assignedProjects,
+         // null for admin/client, object for other roles
       },
     },
   });

@@ -56,8 +56,8 @@ const RiskSchema = new Schema<IRisk>(
         },
         status: {
             type: String,
-            enum: ['Open', 'Mitigating', 'Pending Review', 'Resolved'],
-            default: 'Open',
+       
+            default: 'Pending Review',
         },
         date: {
             type: Date,
