@@ -6,15 +6,15 @@ import { getSession } from "@/lib/auth";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     const session = await getSession(req as any);
 
-  if (!session) {
-    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-  }
+    if (!session) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
     const { id } = await params;
 
     const project = await Project.findById(id);
@@ -37,8 +37,8 @@ export async function POST(
     project.handover = {
       handoverRequested: true,
       handoverDate: new Date(),
-      handoverBy: session._id, 
-      handoverAccepted: false,  
+      handoverBy: session._id,
+      handoverAccepted: false,
       handoverAcceptedDate: null,
       handoverAcceptedBy: null,
     };

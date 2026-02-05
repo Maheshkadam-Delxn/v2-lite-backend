@@ -13,6 +13,7 @@
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
+    "dotenv": "^17.2.3",
     "jose": "^6.1.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
@@ -23,15 +24,19 @@
     "nodemailer": "^7.0.10",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
-    "react-native-gesture-handler": "^2.30.0"
+    "react-native-gesture-handler": "^2.30.0",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/dotenv": "^6.1.1",
     "@types/json2csv": "^5.0.7",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.9.19",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4",

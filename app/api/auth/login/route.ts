@@ -86,7 +86,7 @@ export async function POST(req: Request) {
   await dbConnect();
   const body = await req.json();
 
-  console.log("Body",body);
+  console.log("Body", body);
 
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success)
@@ -115,12 +115,12 @@ console.log("this is user data",user);
       {
         success: false,
         message: "Please verify your email before logging in.",
-        status:403
+        status: 403
       },
       { status: 403 }
     );
   }
-   if (user.newpassRequired) {
+  if (user.newpassRequired) {
     return NextResponse.json(
       {
         success: false,
@@ -144,7 +144,7 @@ console.log("this is user data",user);
   // ------------------------------
   // CREATE TOKEN + SESSION
   // ------------------------------
-  const token = await signToken({ _id: user._id, role: user.role });
+  const token = await signToken({ _id: user._id, role: user.role, name: user.name });
   await createSession(user._id.toString());
 
   // Update last login

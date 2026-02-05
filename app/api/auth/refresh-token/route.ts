@@ -12,6 +12,10 @@ export async function POST(req: Request) {
   if (!decoded)
     return NextResponse.json({ success: false, message: "Invalid or expired token" }, { status: 401 });
 
-  const newToken = signToken({ _id: (decoded as any)._id, role: (decoded as any).role });
+  const newToken = await signToken({
+    _id: (decoded as any)._id,
+    role: (decoded as any).role,
+    name: (decoded as any).name
+  });
   return NextResponse.json({ success: true, message: "Token refreshed", token: newToken });
 }

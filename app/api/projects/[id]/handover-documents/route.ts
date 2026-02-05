@@ -4,14 +4,14 @@ import Project from "@/models/Project";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     const { id } = await params;
     console.log(id);
     const { documentUrls } = await req.json();
-console.log(documentUrls);
+    console.log(documentUrls);
     if (!Array.isArray(documentUrls) || documentUrls.length === 0) {
       return NextResponse.json(
         { success: false, message: "No documents provided" },
