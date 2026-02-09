@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { isAdmin } from "@/utils/permissions";
 import mongoose from "mongoose";
+import { emitNotification } from "@/utils/socketEmit";
 
 export async function GET(
   req: Request,
@@ -111,12 +112,23 @@ export async function PUT(
     if (title !== undefined) milestone.title = title;
     if (description !== undefined) milestone.description = description;
 
+    // Track new assignees for notifications
+    const newAssignees: { userId: string; subtaskTitle: string }[] = [];
+
     if (Array.isArray(subtasks) && subtasks.length > 0) {
       const existingSubtasks = milestone.subtasks || [];
 
       subtasks.forEach((incomingSubtask: any) => {
         const subId = incomingSubtask._id ? incomingSubtask._id : new mongoose.Types.ObjectId();
         const existingIndex = existingSubtasks.findIndex((s: any) => s._id.toString() === subId.toString());
+
+        // Get existing assignees for this subtask
+        const existingAssignees = existingIndex !== -1
+          ? (existingSubtasks[existingIndex].assignedTo || []).map((a: any) => a.toString())
+          : [];
+
+        // Get new assignees
+        const incomingAssignees = incomingSubtask.assignedTo || [];
 
         const updatedSubtask = {
           _id: subId,
@@ -128,6 +140,16 @@ export async function PUT(
           isCompleted: incomingSubtask.isCompleted !== undefined ? incomingSubtask.isCompleted : (existingIndex !== -1 ? existingSubtasks[existingIndex].isCompleted : false),
           attachments: incomingSubtask.attachments !== undefined ? incomingSubtask.attachments : (existingIndex !== -1 ? existingSubtasks[existingIndex].attachments : []),
         };
+
+        // Detect newly assigned users
+        for (const userId of incomingAssignees) {
+          if (userId && !existingAssignees.includes(userId.toString())) {
+            newAssignees.push({
+              userId: userId.toString(),
+              subtaskTitle: updatedSubtask.title
+            });
+          }
+        }
 
         if (existingIndex !== -1) {
           existingSubtasks[existingIndex] = updatedSubtask;
@@ -143,6 +165,25 @@ export async function PUT(
 
     const updatedMilestone = await milestone.save();
 
+    // 🔔 Notify newly assigned users
+    for (const { userId, subtaskTitle } of newAssignees) {
+      if (userId !== session._id.toString()) {
+        emitNotification(
+          userId,
+          "📋 Subtask Assigned",
+          `You've been assigned to subtask "${subtaskTitle}" in milestone "${milestone.title}"`,
+          "info",
+          {
+            screen: "TaskScreen",
+            params: { milestoneId: milestone._id.toString(), projectId: milestone.projectId.toString() }
+          }
+        );
+      }
+    }
+    if (newAssignees.length > 0) {
+      console.log(`[Milestones] Notified ${newAssignees.length} new assignee(s)`);
+    }
+
     console.log("Updated milestone saved:", updatedMilestone._id);
 
     // Try populate on response, fallback to raw if fails
@@ -155,6 +196,26 @@ export async function PUT(
     } catch (populateError: any) {
       console.error("Response populate error:", populateError.message);
       populated = updatedMilestone;
+    }
+
+    // 🔔 Notify manager/admin about milestone update
+    if (populated && populated.projectId && (populated as any).projectId.manager) {
+      const managerId = (populated as any).projectId.manager.toString();
+      if (managerId !== session._id.toString()) {
+        emitNotification(
+          managerId,
+          "🎯 Milestone Updated",
+          `Milestone "${populated.title}" has been updated.`,
+          "info",
+          {
+            screen: "TaskScreen",
+            params: {
+              milestoneId: populated._id.toString(),
+              projectId: populated.projectId._id.toString()
+            }
+          }
+        );
+      }
     }
 
     return NextResponse.json({
@@ -212,4 +273,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}

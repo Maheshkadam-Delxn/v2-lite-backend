@@ -4,6 +4,47 @@ import Project from "@/models/Project";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 
+// GET: Fetch single Risk by ID
+export async function GET(
+    req: Request,
+    { params }: { params: Promise<{ riskId: string }> }
+) {
+    await dbConnect();
+    const session = await getSession(req as any);
+
+    if (!session) {
+        return NextResponse.json(
+            { success: false, message: "Unauthorized" },
+            { status: 403 }
+        );
+    }
+
+    try {
+        const { riskId } = await params;
+        const risk = await Risk.findById(riskId)
+            .populate("assignedTo", "name email")
+            .populate("createdBy", "name email");
+
+        if (!risk) {
+            return NextResponse.json(
+                { success: false, message: "Risk not found" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: risk,
+        });
+    } catch (error: any) {
+        console.error("Error fetching risk:", error.message);
+        return NextResponse.json(
+            { success: false, message: "Failed to fetch risk" },
+            { status: 500 }
+        );
+    }
+}
+
 // PUT: Update Risk (Status, Evidence, or Details)
 export async function PUT(
     req: Request,

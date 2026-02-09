@@ -5,6 +5,8 @@ import { sendEmail } from "@/utils/email";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccess } from "@/utils/permissions";
+import { sendPushNotificationToMany } from "@/utils/pushNotification";
+import { emitAnnouncement } from "@/utils/socketEmit";
 
 export async function GET(req: Request) {
   await dbConnect();
@@ -42,9 +44,35 @@ export async function POST(req: Request) {
     await Promise.all(users.map((u) => sendEmail(u.email, subject, html)));
   }
 
+  // 🔔 Send push notification to all users
+  const allUsers = await User.find({}, "_id");
+  const userIds = allUsers
+    .map((u) => u._id.toString())
+    .filter((id) => id !== session._id.toString());
+
+  if (userIds.length > 0) {
+    sendPushNotificationToMany(
+      userIds,
+      "📢 Announcement",
+      title,
+      {
+        type: "info",
+        screen: "Announcements",
+        params: { announcementId: announcement._id.toString() }
+      }
+    ).catch(err => console.error("[Announcement] Push error:", err));
+
+    // 🔔 Socket Toast (Broadcast to all)
+    emitAnnouncement(
+      "📢 Announcement",
+      title
+    );
+  }
+
   return NextResponse.json({
     success: true,
     message: "Announcement created successfully",
     data: announcement,
   });
 }
+

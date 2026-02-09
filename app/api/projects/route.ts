@@ -253,6 +253,7 @@ import { canAccess } from "@/utils/permissions";
 import "@/models/ProjectType";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
+import { emitNotification } from "@/utils/socketEmit";
 
 // Helper: generate random password
 const generatePassword = (length = 10) => {
@@ -459,6 +460,30 @@ export async function POST(req: Request) {
     });
 
     const populated = await Project.findById(project._id).populate("manager engineers projectType");
+
+    // 🔔 Notify all admins when a client submits a new proposal
+    if (body.status === "Proposal Under Approval") {
+      try {
+        const admins = await User.find({ role: "admin" }).select("_id");
+        const clientName = body.clientName || session.name || "A client";
+
+        for (const admin of admins) {
+          emitNotification(
+            admin._id.toString(),
+            "📋 New Proposal Received",
+            `${clientName} has submitted a new proposal: "${body.name}"`,
+            "info",
+            {
+              screen: "ViewDetails",
+              params: { projectId: project._id.toString() }
+            }
+          );
+        }
+        console.log(`[Projects] Notified ${admins.length} admin(s) about new proposal from ${clientName}`);
+      } catch (notifyErr) {
+        console.error("[Projects] Error notifying admins:", notifyErr);
+      }
+    }
 
     return NextResponse.json(
       {

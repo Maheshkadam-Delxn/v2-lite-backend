@@ -151,6 +151,7 @@ import Survey from "@/models/Survey";
 import Notification from "@/models/Notification";
 import Transaction from "@/models/NewTransaction";
 import mongoose from "mongoose";
+import { emitProposalStatus } from "@/utils/socketEmit";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   await dbConnect();
@@ -283,6 +284,41 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     console.log("Received updates for project:", id, updates);
     // console.log("Project after update:", isNowApproved, project.projectType._id);
+
+    // 🔔 Notify client when proposal is approved/rejected
+    if (existingProject && updates.status && existingProject.status !== updates.status) {
+      // Detect if coming from proposal approval workflow
+      const wasProposalUnderApproval = existingProject.status === "Proposal Under Approval";
+      const isApproved = updates.status === "Ongoing" || updates.status === "Initialize";
+      const isRejected = updates.status === "Rejected";
+
+      // Trigger notification if proposal was under approval and now approved/rejected
+      if ((wasProposalUnderApproval || isApproved || isRejected) && existingProject.createdBy) {
+        const clientId = existingProject.createdBy.toString();
+
+        // Only notify if the person updating is not the creator
+        if (clientId !== session._id.toString()) {
+          if (isApproved) {
+            emitProposalStatus(
+              clientId,
+              project._id.toString(),
+              "approved",
+              project.name || "Untitled"
+            );
+            console.log(`[Projects] Emitted proposal APPROVED notification to client: ${clientId}`);
+          } else if (isRejected) {
+            emitProposalStatus(
+              clientId,
+              project._id.toString(),
+              "rejected",
+              project.name || "Untitled",
+              updates.rejectionReason
+            );
+            console.log(`[Projects] Emitted proposal REJECTED notification to client: ${clientId}`);
+          }
+        }
+      }
+    }
 
     function calculateEndDateFromISO(startDateISO: string, estimatedDays: number) {
       const startDate = new Date(startDateISO);

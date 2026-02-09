@@ -3,6 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 import Milestone from "@/models/Milestone";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { emitNotification } from "@/utils/socketEmit";
 
 
 // ✅ CREATE Milestone (ALL FIELDS)
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
   console.log("Session in milestone POST:", session);
 
   // 🔐 Authorization
-  if (!session ) {
+  if (!session) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
       { status: 403 }
@@ -67,6 +68,29 @@ export async function POST(req: Request) {
       status,
       createdby: session._id,
     });
+
+    // 🔔 Notify assigned users for each subtask
+    if (subtasks && Array.isArray(subtasks)) {
+      for (const subtask of subtasks) {
+        if (subtask.assignedTo && Array.isArray(subtask.assignedTo)) {
+          for (const userId of subtask.assignedTo) {
+            if (userId && userId !== session._id.toString()) {
+              emitNotification(
+                userId.toString(),
+                "📋 Subtask Assigned",
+                `You've been assigned to subtask "${subtask.title}" in milestone "${title}"`,
+                "info",
+                {
+                  screen: "TaskScreen",
+                  params: { milestoneId: milestone._id.toString(), projectId: projectId.toString() }
+                }
+              );
+            }
+          }
+        }
+      }
+      console.log(`[Milestones] Notified assignees for ${subtasks.length} subtask(s)`);
+    }
 
     return NextResponse.json(
       {

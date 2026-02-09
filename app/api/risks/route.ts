@@ -4,6 +4,8 @@ import Project from "@/models/Project";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import mongoose from "mongoose";
+import { sendAlertNotification, sendPushNotification } from "@/utils/pushNotification";
+import { emitRiskAlert } from "@/utils/socketEmit";
 
 // POST: Create a new risk
 export async function POST(req: Request) {
@@ -38,22 +40,23 @@ export async function POST(req: Request) {
             );
         }
 
-        // Validate Project and User Allocation
-        if (assignedTo) {
-            const project = await Project.findById(projectId);
-            if (!project) {
-                return NextResponse.json(
-                    { success: false, message: "Project not found" },
-                    { status: 404 }
-                );
-            }
+        // Get project for notifications
+        const project = await Project.findById(projectId);
+        if (!project) {
+            return NextResponse.json(
+                { success: false, message: "Project not found" },
+                { status: 404 }
+            );
+        }
 
+        // Validate User Allocation
+        if (assignedTo) {
             const isManager = project.manager?.toString() === assignedTo;
             const isEngineer = project.engineers?.some(
                 (eng: any) => eng.toString() === assignedTo
             );
 
-           
+
         }
 
         const risk = await Risk.create({
@@ -69,6 +72,56 @@ export async function POST(req: Request) {
             // score calculated in pre-save
             // status defaults to 'Open'
         });
+
+        // 🔔 Send push notifications for high severity risks
+        const isHighSeverity = severity === "High" || severity === "Critical";
+
+        // Notify project manager for High/Critical risks
+        if (isHighSeverity && project.manager) {
+            const managerId = project.manager.toString();
+            if (managerId !== session._id.toString()) {
+                sendAlertNotification(
+                    managerId,
+                    `${severity} Risk Identified`,
+                    `${title}`,
+                    {
+                        type: "alert",
+                        screen: "RiskDetail",
+                        params: { riskId: risk._id.toString() }
+                    }
+                ).catch(err => console.error("[Risk] Push error:", err));
+
+                // 🔔 Socket Toast
+                emitRiskAlert(
+                    managerId,
+                    risk._id.toString(),
+                    title,
+                    severity
+                );
+            }
+        }
+
+        // Notify assigned user
+        if (assignedTo && assignedTo !== session._id.toString()) {
+            sendPushNotification(
+                assignedTo,
+                "⚠️ Risk Assigned",
+                `You've been assigned to: "${title}"`,
+                {
+                    type: "alert",
+                    screen: "RiskDetail",
+                    params: { riskId: risk._id.toString() }
+                }
+            ).catch(err => console.error("[Risk] Push error:", err));
+
+            // 🔔 Socket Toast
+            emitRiskAlert(
+                assignedTo,
+                risk._id.toString(),
+                title,
+                severity
+            );
+        }
 
         return NextResponse.json(
             {
@@ -86,3 +139,4 @@ export async function POST(req: Request) {
         );
     }
 }
+

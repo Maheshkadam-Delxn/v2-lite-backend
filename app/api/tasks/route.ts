@@ -4,6 +4,8 @@ import Project from "@/models/Project";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccess } from "@/utils/permissions";
+import { sendPushNotification } from "@/utils/pushNotification";
+import { emitTaskAssigned } from "@/utils/socketEmit";
 
 // ✅ GET all tasks
 export async function GET(req: Request) {
@@ -61,9 +63,36 @@ export async function POST(req: Request) {
   const populated = await Task.findById(task._id)
     .populate("projectId assignedTo createdBy");
 
+  // 🔔 Send push notification to assigned users
+  if (body.assignedTo && body.assignedTo.length > 0) {
+    const assignedUsers = Array.isArray(body.assignedTo) ? body.assignedTo : [body.assignedTo];
+    for (const userId of assignedUsers) {
+      if (userId && userId !== session._id.toString()) {
+        sendPushNotification(
+          userId.toString(),
+          "📋 Task Assigned",
+          `You've been assigned: "${body.title}"`,
+          {
+            type: "info",
+            screen: "TaskScreen",
+            params: { taskId: task._id.toString() }
+          }
+        ).catch(err => console.error("[Task] Push notification error:", err));
+
+        // 🔔 Send in-app socket notification for real-time toast
+        emitTaskAssigned(
+          userId.toString(),
+          task._id.toString(),
+          body.title
+        );
+      }
+    }
+  }
+
   return NextResponse.json({
     success: true,
     message: "Task created successfully",
     data: populated,
   });
 }
+

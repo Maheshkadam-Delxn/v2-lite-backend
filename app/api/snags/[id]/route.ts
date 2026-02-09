@@ -5,6 +5,8 @@ import "@/models/WorkProgress"; // ✅ Register model for population
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccess } from "@/utils/permissions";
+import { sendPushNotification, sendAlertNotification } from "@/utils/pushNotification";
+import { emitSnagAlert, emitNotification } from "@/utils/socketEmit";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
@@ -146,6 +148,60 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       userAgent: req.headers.get("user-agent"),
     });
 
+    // 🔔 Send push notifications based on status change
+    if (status && status !== currentStatus) {
+      const snagData = {
+        type: snag.severity === "critical" ? "alert" : "info",
+        screen: "SnagDetailScreen",
+        params: { snagId: snag._id.toString() }
+      };
+
+      // Notify assigned user when snag is assigned to them
+      if (status === "assigned" && snag.assignedTo) {
+        const assigneeId = snag.assignedTo.toString();
+        if (assigneeId !== userId.toString()) {
+          // Push notification (for when app is closed)
+          sendPushNotification(
+            assigneeId,
+            "🔧 Snag Assigned",
+            `You've been assigned: "${snag.title}" at ${snag.location}`,
+            snagData
+          ).catch(err => console.error("[Snag] Push error:", err));
+
+          // Socket emit (for real-time in-app toast)
+          emitSnagAlert(
+            assigneeId,
+            snag._id.toString(),
+            "🔧 Snag Assigned",
+            `You've been assigned: "${snag.title}"`,
+            snag.severity || "medium"
+          );
+        }
+      }
+
+      // Notify reporter when snag status changes
+      if (snag.reportedBy && snag.reportedBy.toString() !== userId.toString()) {
+        const reporterId = snag.reportedBy.toString();
+
+        // Push notification
+        sendPushNotification(
+          reporterId,
+          `🔧 Snag ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+          `"${snag.title}" is now ${status}`,
+          snagData
+        ).catch(err => console.error("[Snag] Push error:", err));
+
+        // Socket emit (for real-time in-app toast)
+        emitNotification(
+          reporterId,
+          `🔧 Snag ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+          `"${snag.title}" is now ${status}`,
+          snag.severity === "critical" ? "alert" : "info",
+          { screen: "SnagDetailScreen", params: { snagId: snag._id.toString() } }
+        );
+      }
+    }
+
     return NextResponse.json({ success: true, data: snag });
 
   } catch (error: any) {
@@ -155,3 +211,4 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     );
   }
 }
+

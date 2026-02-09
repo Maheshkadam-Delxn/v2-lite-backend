@@ -3,6 +3,8 @@ import Proposal from "@/models/Proposal";
 import { NextResponse, NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 import { isAdmin, canAccess } from "@/utils/permissions";
+import { sendPushNotification } from "@/utils/pushNotification";
+import { emitProposalStatus } from "@/utils/socketEmit";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   await dbConnect();
@@ -43,8 +45,40 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   )
     return NextResponse.json({ success: false, message: "Permission denied" }, { status: 403 });
 
+  const previousStatus = proposal.status;
   Object.assign(proposal, updates);
   await proposal.save();
+
+  // 🔔 Send push notification when proposal is approved/rejected
+  if (updates.status && updates.status !== previousStatus) {
+    const submitterId = proposal.submittedBy.toString();
+
+    if (submitterId !== session._id.toString()) {
+      const isApproved = updates.status === "approved";
+      const isRejected = updates.status === "rejected";
+
+      if (isApproved || isRejected) {
+        sendPushNotification(
+          submitterId,
+          `📝 Proposal ${isApproved ? "Approved" : "Rejected"}`,
+          `Your proposal "${proposal.title || 'Untitled'}" has been ${updates.status}`,
+          {
+            type: isApproved ? "success" : "error",
+            screen: "ViewProposal",
+            params: { proposalId: proposal._id.toString() }
+          }
+        ).catch(err => console.error("[Proposal] Push error:", err));
+
+        // 🔔 Socket Toast
+        emitProposalStatus(
+          submitterId,
+          proposal._id.toString(),
+          updates.status,
+          proposal.title || 'Untitled'
+        );
+      }
+    }
+  }
 
   return NextResponse.json({
     success: true,

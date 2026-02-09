@@ -3,6 +3,8 @@ import Transaction from "@/models/Transaction";
 import { NextResponse, NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 import { isAdmin, canAccess } from "@/utils/permissions";
+import { sendPushNotification, sendApprovalNotification } from "@/utils/pushNotification";
+import { emitTransactionStatus } from "@/utils/socketEmit";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   await dbConnect();
@@ -42,8 +44,40 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   )
     return NextResponse.json({ success: false, message: "Permission denied" }, { status: 403 });
 
+  const previousStatus = transaction.status;
   Object.assign(transaction, updates);
   await transaction.save();
+
+  // 🔔 Send push notification when transaction is approved/rejected
+  if (updates.status && updates.status !== previousStatus) {
+    const creatorId = transaction.createdBy.toString();
+
+    if (creatorId !== session._id.toString()) {
+      const isApproved = updates.status === "approved";
+      const isRejected = updates.status === "rejected";
+
+      if (isApproved || isRejected) {
+        sendPushNotification(
+          creatorId,
+          `💰 Transaction ${isApproved ? "Approved" : "Rejected"}`,
+          `Your transaction of ₹${transaction.amount || 0} has been ${updates.status}`,
+          {
+            type: isApproved ? "success" : "error",
+            screen: "TransactionModal",
+            params: { transactionId: transaction._id.toString() }
+          }
+        ).catch(err => console.error("[Transaction] Push error:", err));
+
+        // 🔔 Socket Toast
+        emitTransactionStatus(
+          creatorId,
+          transaction._id.toString(),
+          updates.status,
+          transaction.amount || 0
+        );
+      }
+    }
+  }
 
   return NextResponse.json({
     success: true,

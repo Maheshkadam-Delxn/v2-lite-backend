@@ -3,6 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 
 import Project from "@/models/Project";
 import { getSession } from "@/lib/auth";
+import { emitNotification } from "@/utils/socketEmit";
 
 export async function POST(
   req: Request,
@@ -44,6 +45,17 @@ export async function POST(
     };
 
     await project.save();
+
+    // 🔔 Notify manager/admin about handover request
+    if (project.manager && project.manager.toString() !== session._id.toString()) {
+      emitNotification(
+        project.manager.toString(),
+        "🔑 Handover Requested",
+        `Handover has been requested for project: "${project.name}"`,
+        "info",
+        { screen: "ViewDetails", params: { projectId: project._id.toString() } }
+      );
+    }
 
     return NextResponse.json({
       message: "Handover request sent successfully",

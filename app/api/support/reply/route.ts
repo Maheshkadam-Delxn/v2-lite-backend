@@ -2,6 +2,8 @@ import dbConnect from "@/lib/dbConnect";
 import Support from "@/models/Support";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { sendPushNotification } from "@/utils/pushNotification";
+import { emitNotification } from "@/utils/socketEmit";
 
 export async function POST(req: Request) {
   await dbConnect();
@@ -24,9 +26,34 @@ export async function POST(req: Request) {
   ticket.lastUpdated = new Date();
   await ticket.save();
 
+  // 🔔 Notify ticket creator about the reply
+  const ticketCreatorId = ticket.userId?.toString() || ticket.createdBy?.toString();
+  if (ticketCreatorId && ticketCreatorId !== session._id.toString()) {
+    sendPushNotification(
+      ticketCreatorId,
+      "💬 Support Reply",
+      `New reply on your ticket: "${ticket.subject || 'Support Ticket'}"`,
+      {
+        type: "info",
+        screen: "CustomerSupport",
+        params: { ticketId: ticket._id.toString() }
+      }
+    ).catch(err => console.error("[Support] Push error:", err));
+
+    // 🔔 Socket Toast
+    emitNotification(
+      ticketCreatorId,
+      "💬 Support Reply",
+      `New reply on your ticket: "${ticket.subject || 'Support Ticket'}"`,
+      "info",
+      { screen: "CustomerSupport", params: { ticketId: ticket._id.toString() } }
+    );
+  }
+
   return NextResponse.json({
     success: true,
     message: "Reply added successfully",
     data: ticket,
   });
 }
+
