@@ -105,7 +105,8 @@ export function emitProposalStatus(
     userId: string,
     proposalId: string,
     status: string,
-    proposalTitle: string
+    proposalTitle: string,
+    rejectionReason?: string // ✅ NEW (optional)
 ): void {
     const isApproved = status === "approved";
     emitNotification(

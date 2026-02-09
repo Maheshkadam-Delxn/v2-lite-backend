@@ -312,7 +312,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
               project._id.toString(),
               "rejected",
               project.name || "Untitled",
-              updates.rejectionReason
+              updates.rejectionReason || ""
             );
             console.log(`[Projects] Emitted proposal REJECTED notification to client: ${clientId}`);
           }
